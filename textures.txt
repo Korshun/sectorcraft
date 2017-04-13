@@ -1,0 +1,23 @@
+// Fix texture conflicts
+
+Texture STEP_V, 64, 64
+{
+	Patch STEP1, 0, 0
+}
+Texture STEP_H, 64, 64
+{
+	Patch STEP2, 0, 0
+}
+
+Flat STEP1, 32, 16
+{
+	Patch STEP05, 0, 8
+	Patch STEP05, 0, 5
+	Patch STEP04, 0, 0
+}
+
+Flat STEP2, 32, 16
+{
+	Patch SW11_4, 0, -112
+	Patch STEP03, 0, 0
+}

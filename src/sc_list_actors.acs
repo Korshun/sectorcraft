@@ -1,0 +1,275 @@
+
+// Actors.
+
+#define ACTOR_CLASSNAME   0
+#define ACTOR_DISPLAYNAME 1
+#define ACTOR_SPRITE      2
+#define ACTOR_HEIGHT      3
+
+#define NUM_AMMOS       9
+#define NUM_WEAPONS     12
+#define NUM_HEALTHARMOR 9
+#define NUM_SPECIAL     3
+#define NUM_SPHERES     10
+#define NUM_RUNES       10
+#define NUM_MONSTERS    25
+#define NUM_NATURE      6
+#define NUM_LIGHTSOURCE 21
+#define NUM_HELL        16
+#define NUM_SMALLGORE   6
+#define NUM_SPIKES		15
+#define NUM_FOUNTAINS 	7
+#define NUM_COLORSTUFF	11
+#define NUM_SKULLTAG 	3
+
+#define NUM_ACTORS 164
+
+function int ActorIsMonster(int index)
+{
+	int begin = 1 + NUM_AMMOS + NUM_WEAPONS + NUM_HEALTHARMOR + NUM_SPECIAL + NUM_SPHERES + NUM_RUNES;
+	int end = begin + NUM_MONSTERS;
+
+	return index >= begin && index < end;
+}
+
+
+#define TIMEFREEZESPHERE_INDEX 42
+#define RANDOMSPHERE_INDEX 43
+#define BARREL_INDEX 80
+
+// Height must be 0 if the actor is
+// 1. not solid OR...
+// 2. tool projectiles can pass through it OR...
+// 3. the actor doesn't actually exist ("Delete Actor").
+int Actors[NUM_ACTORS][4] =
+{
+	// ACTOR REMOVER.
+	{ "", "Delete Actor", "", 0 }, // This actor is not in the actor menu since 0.6.
+
+	// Ammo.
+	{ "Clip",		"Bullet Clip",		"CLIPA0", 0 },
+	{ "ClipBox",	"Bullet Box",		"AMMOA0", 0 },
+	{ "Shell",		"Shells",			"SHELA0", 0 },
+	{ "ShellBox",	"Shell Box",		"SBOXA0", 0 },
+	{ "RocketAmmo",	"Rocket",			"ROCKA0", 0 },
+	{ "RocketBox",	"Box of Rockets",	"BROKA0", 0 },
+	{ "Cell",		"Energy Cell",		"CELLA0", 0 },
+	{ "CellPack",	"Cell Pack",		"CELPA0", 0 },
+	{ "Backpack",   "Backpack",         "BPAKA0", 0 },
+
+	// Weapons.
+	{ "Chainsaw",        "Chainsaw",         "CSAWA0", 0 },
+	{ "Pistol",          "Pistol",           "PISTA0", 0 },
+	{ "Shotgun",         "Shotgun",          "SHOTA0", 0 },
+	{ "Chaingun",        "Chaingun",         "MGUNA0", 0 },
+	{ "Minigun",         "Minigun",          "MNGNA0", 0 },
+	{ "SuperShotgun",    "Super Shotgun",    "SGN2A0", 0 },
+	{ "RocketLauncher",  "Rocket Launcher",  "LAUNA0", 0 },
+	{ "GrenadeLauncher", "Grenade Launcher", "GLAUA0", 0 },
+	{ "PlasmaRifle",     "Plasma Rifle",     "PLASA0", 0 },
+	{ "Railgun",         "Railgun",          "RAILA0", 0 },
+	{ "BFG9000",         "BFG 9000",         "BFUGA0", 0 },
+	{ "BFG10K",          "BFG 10000",        "BFG2A0", 0 },
+
+	// Health/armor.
+	{ "Stimpack",         "Stimpack",     "STIMA0", 0 },
+	{ "Medikit",          "Medikit",      "MEDIA0", 0 },
+	{ "GreenArmor",       "Armor",        "ARM1A0", 0 },
+	{ "BlueArmor",        "Megaarmor",    "ARM2A0", 0 },
+	{ "RedArmor",         "Red Armor",    "ARM3A0", 0 },
+	{ "HealthBonus",      "Health Bonus", "BON1A0", 0 },
+	{ "ArmorBonus",       "Armor Bonus",  "BON2C0", 0 },
+	{ "MaxHealthBonus",   "Max. Health Bonus", "BON3A0", 0 },
+	{ "MaxArmorBonus",    "Max. Armor Bonus",  "BON4C0", 0 },
+
+	// Special items.
+	{ "RadSuit",               "Radiation Shielding Suit",  "SUITA0", 0 },
+	{ "Infrared",              "Light Amplification Visor", "PVISA0", 0 },
+	{ "Berserk",               "Berserk Pack",              "PSTRA0", 0 },
+
+	// Spheres.
+	{ "Soulsphere",            "Soulsphere",                "SOULA0", 0 },
+	{ "Megasphere",            "Megasphere",                "MEGAA0", 0 },
+    { "InvulnerabilitySphere", "Invulnerability",           "PINVA0", 0 },
+	{ "BlurSphere",            "Partial Invisibilty",       "PINSA0", 0 },
+	{ "InvisibilitySphere",    "Invisibility",              "SINVA0", 0 },
+	{ "TurboSphere",           "Turbosphere",               "TURBA0", 0 },
+	{ "DoomSphere",            "Doomsphere",                "DOOMA0", 0 },
+	{ "GuardSphere",           "Guardsphere",               "GARDA0", 0 },
+	{ "TimeFreezeSphere",      "Time Freeze",               "TIMEA0", 0 },
+	{ "RandomPowerup",         "Randomsphere",              "MEGAA0", 0 },
+	
+	// Runes.
+	{ "StrengthRune",          "Strength Rune",       "STRRA0", 0 },
+	{ "RageRune",              "Rage Rune",           "RAGRA0", 0 },
+	{ "DrainRune",             "Drain Rune",          "DRARA0", 0 },
+	{ "SpreadRune",            "Spread Rune",         "SPRRA0", 0 },
+	{ "ResistanceRune",        "Resistance Rune",     "RESRA0", 0 },
+	{ "RegenerationRune",      "Regeneration Rune",   "REGRA0", 0 },
+	{ "ProsperityRune",        "Prosperity Rune",     "PRSRA0", 0 },
+	{ "ReflectionRune",        "Reflection Rune",     "REFRA0", 0 },
+	{ "HighJumpRune",          "High Jump Rune",      "HIJRA0", 0 },
+	{ "HasteRune",             "Haste Rune",          "HASRA0", 0 },
+
+	// Monsters.
+	{ "Zombieman",			"Zombieman",			"POSSA1", 0 },
+	{ "ShotgunGuy",			"Shotgunner",			"SPOSA1", 0 },
+	{ "DoomImp",			"Imp",					"TROOA1", 0 },
+	{ "DarkImp",            "Dark Imp",             "DIMPA1", 0 },
+	{ "ChaingunGuy",		"Chaingunner",			"CPOSA1", 0 },
+	{ "SuperShotgunGuy",    "Super Shotguner",      "GPOSA1", 0 },
+	{ "Demon",				"Demon",				"SARGA1", 0 },
+	{ "Spectre",			"Spectre",				"SARGA1", 0 },
+	{ "BloodDemon",         "Blood Demon",          "SRG2A1", 0 },
+	{ "LostSoul",			"Lost Soul",			"SKULA1", 0 },
+	{ "Cacodemon",			"Cacodemon",			"HEADA1", 0 },
+	{ "Cacolantern",        "Cacolantern",          "HED2A1", 0 },
+	{ "Abaddon",            "Abaddon",              "HED3A1", 0 },
+	{ "Revenant",			"Revenant",				"SKELA1D1", 0},
+	{ "PainElemental",		"Pain Elemental",		"PAINA1", 0 },
+	{ "HellKnight",			"Hell Knight",			"BOS2A1C1", 0 },
+	{ "BaronOfHell",		"Baron of Hell",		"BOSSA1", 0 },
+	{ "Belphegor",          "Belphegor",            "BOS3A1", 0 },
+	{ "Fatso",				"Mancubus",				"FATTA1", 0 },
+	{ "Hectebus",           "Hectebus",             "HECTA1", 0 },
+	{ "Arachnotron",		"Arachnotron",			"BSPIA1D1", 0 },
+	{ "Archvile",			"Archvile",				"VILEA1D1", 0 },
+	{ "SpiderMastermind",	"Spider Mastermind",	"SPIDA1D1", 0 },
+	{ "Cyberdemon",			"Cyberdemon",			"CYBRA1", 0 },
+	{ "WolfensteinSS",		"Wolfenstein SS",		"SSWVA1", 0 },
+
+	// Nature and misc.
+	{ "TechPillar",			"Tech Pillar",		"ELECA0", 128 },
+	{ "ExplosiveBarrel",	"Barrel",			"BAR1A0", 0 }, // This actor may move but let's think it is static anyway. 0 because it is shootable.
+	{ "BurningBarrel",		"Burning Barrel",	"FCANA0", 32 },
+	//{ "BigTree",			"Big Tree",			"TRE2A0", 108 }, // Disabled because it is too hard to remove.
+	{ "TorchTree",          "Burnt Tree",		"TRE1A0", 56 },
+	{ "Stalagtite",			"Stalagtite",		"SMITA0", 40 },
+	{ "Stalagmite",			"Stalagmite",		"SMT2A0", 48 },
+
+	// Light sources.
+	{ "Column",     		"Floor Lamp",  			"COLUA0", 48 },
+	{ "RedColumn",			"Red Floor Lamp",		"RCOLA0", 48 },
+	{ "BlueColumn",			"Blue Floor Lamp",		"BCOLA0", 48 },
+	{ "TechLamp2",			"Tech Lamp",			"TLP2A0", 60 },
+	{ "RedTechLamp2",		"Red Tech Lamp",		"TLP4A0", 60 },
+	{ "TechLamp",			"Big Tech Lamp",		"TLMPA0", 80 },
+	{ "RedTechLamp",		"Big Red Tech Lamp",	"TLP3A0", 80 },
+	{ "ShortRedTorch",		"Short Red Torch",		"SMRTA0", 37 },
+	{ "ShortGreenTorch",	"Short Green Torch",	"SMGTA0", 37 },
+	{ "ShortBlueTorch",		"Short Blue Torch",		"SMBTA0", 37 },
+	{ "ShortYellowTorch",	"Short Yellow Torch",	"SMYTA0", 37 },
+	{ "ShortWhiteTorch",	"Short White Torch",	"SMWTA0", 37 },
+	{ "RedTorch",			"Tall Red Torch",		"TREDA0", 68 },
+	{ "GreenTorch",			"Tall Green Torch",		"TGRNA0", 68 },
+	{ "BlueTorch",			"Tall Blue Torch",		"TBLUA0", 68 },
+	{ "YellowTorch",		"Tall Yellow Torch",	"TYELA0", 68 },
+	{ "WhiteTorch",			"Tall White Torch",		"TWHIA0", 68 },
+	{ "Candlestick",		"Candle",		"CANDA0", 0 },
+	{ "RedCandlestick",		"Red Candle",	"CANRA0", 0 },
+	{ "BlueCandlestick",	"Blue Candle",	"CANBA0", 0 },
+	{ "Candelabra",			"Candelabra",	"CBRAA0", 60 },
+
+	// Hell.
+	{ "EvilEye",			"Evil Eye", 			"CEYEA0", 54 },
+	{ "RedEvilEye",			"Red Evil Eye",	"CEYRA0", 54 },
+	{ "BlueEvilEye",		"Blue Evil Eye",	"CEYBA0", 54 },
+	{ "FloatingSkull",      	"Floating Skulls",      	"FSKUA0", 26 },
+	{ "FloatingBobbingSkull", 	"Floating Bobbing Skulls",	"FSKUA0", 26 },
+	{ "HeadCandles",    	"Pile of Skulls",	 	"POL3A0", 42 },
+
+	{ "TallGreenColumn",	"Big Marble Column",		"COL1A0", 52 },
+	{ "TallRedColumn",		"Big Red Column",		"COL3A0", 52 },
+	{ "TallGreyColumn",		"Big Grey Column",	"COL7A0", 52 },
+	{ "TallGothicColumn",	"Big Gothic Column",		"GCOLA0", 52 },
+	{ "ShortGreenColumn",	"Small Marble Column",		"COL2A0", 40 },
+	{ "ShortRedColumn",		"Small Red Column",	"COL4A0", 40 },
+	{ "GreyColumn",			"Small Grey Column",	"COL8A0", 40 },
+	{ "SkullColumn",		"Skull Pedestal",			"COL6A0", 40 },
+	{ "HeartColumn",		"Heart Pedestal",			"COL5A0", 40 },
+	{ "GreyHeartColumn",	"Grey Heart Pedestal","COL9A0", 40 },
+
+	// Small gore.
+	{ "Gibs",           	"Crushed corpse",   "POL5A0", 0 },
+	{ "MarineHelmetGibs",	"Crushed marine",	"GIB1A0", 0 },
+	{ "ColonGibs",			"Pool of blood",	"POB1A0", 0 },
+	{ "SmallBloodPool",		"Pool of blood 2", 	"POB2A0", 0 },
+	{ "BrainStem",			"Brain Stem",		"BRS1A0", 0 },
+	{ "ImpHead",			"Imp Head",			"IHEDA1", 8 }, // Radius 8
+
+	// Impaling spikes.
+	{ "HeadOnAStick",	"Skull on a Stick",		"POL4A0", 56 },
+	{ "HeadsOnAStick",  "5 Skulls on a Stick", 	"POL2A0", 64 },
+	{ "DeadStick",      "Dead on a Stick",  	"POL1A0", 64 },
+	{ "LiveStick",		"Living on a Stick",	"POL6A0", 64 },
+	{ "ImpalingSpike",		"Impailing Spike",		"POL7A0", 64 },
+	{ "ImpalingSpike2",		"Impailing Spike 2",	"POL8A0", 56 },
+	{ "ImpalingSpike3",		"Impailing Spike 3",	"POL9A0", 56 },
+	{ "ImpalingSpike4",		"Impailing Spike 4",	"POLAA0", 56 },
+	{ "ImpalingSpike5",		"Impailing Spike 5",	"POLBA0", 64 },
+	{ "ImpalingSpike6",		"Impailing Spike 6",	"POLCA0", 45 },
+	{ "ImpalingSpike7",		"Impailing Spike 7",	"POLDA0", 54 },
+	{ "ImpalingSpike8",		"Impailing Spike 8",	"POLEA0", 54 },
+	{ "ImpalingSpike9",		"Impailing Spike 9",	"POLFA0", 64 },
+	{ "ImpalingSpike10",	"Impailing Spike 10",	"POLGA0", 64 },
+	{ "ImpalingSpike11",	"Impailing Spike 11",	"POLHA0", 64 },
+
+	// Particle fountains.
+	{ "RedParticleFountain", 		"\cgRed \c-Particle Fountain",		"", 0 },
+	{ "GreenParticleFountain",		"\cdGreen \c-Particle Fountain",	"", 0 },
+	{ "BlueParticleFountain",		"\chBlue \c-Particle Fountain",		"", 0 },
+	{ "YellowParticleFountain",		"\ckYellow \c-Particle Fountain",	"", 0 },
+	{ "PurpleParticleFountain",		"\ctPurple \c-Particle Fountain",	"", 0 },
+	{ "BlackParticleFountain",		"\cmBlack \c-Particle Fountain",	"", 0 },
+	{ "WhiteParticleFountain",		"\cjWhite \c-Particle Fountain",	"", 0 },
+
+	// Colored items.
+	{ "RedCard",		"\cgRed\c- Key Card",		"RKEYA0", 0 },
+	{ "YellowCard",		"\ckYellow\c- Key Card",	"YKEYA0", 0 },
+	{ "BlueCard",		"\chBlue\c- Key Card",	"BKEYA0", 0 },
+	{ "RedSkull",		"\cgRed\c- Skull",		"RSKUA0", 0 },
+	{ "YellowSkull",	"\ckYellow\c- Skull",		"YSKUA0", 0 },
+	{ "BlueSkull",		"\chBlue\c- Skull",		"BSKUA0", 0 },
+	{ "RedFlag",		"\cgRed\c- Flag",		"RFLAA0", 0 },
+	{ "BlueFlag",		"\chBlue\c- Flag",	"BFLAA0", 0 },
+	{ "GreenFlag",		"\cdGreen\c- Flag",	"GFLAA0", 0 },
+	{ "GoldFlag",		"\ckGold\c- Flag",	"YFLAA0", 0 },
+	{ "WhiteFlag",		"\cjWhite\c- Flag",	"WFLAA0", 0 },
+
+	// Skulltag.
+	{ "HellScorePillar",	"Score Pillar",	"HLSPA0", 40 },
+	{ "Impse",				"Impse",		"IMPSA0", 48 },
+	{ "Hissy",				"Hissy", 		"HISYA1", 26 },
+	
+
+	// NO STATUES YET :(
+
+
+	/*
+	// Corpses.
+	{ "DeadMarine",     "Dead Marine",		"PLAYN0", 0 },
+	{ "GibbedMarine",   "Gibbed Marine",	"PLAYW0", 0 },
+	{ "DeadZombieman",  "Dead Zombieman",	"", 0 },
+	{ "DeadShotgunGuy", "Dead Shotgunner",	"", 0 },
+	{ "DeadDoomImp",    "Dead Imp",			"", 0 },
+	{ "DeadDemon",		"Dead Demon",		"", 0 },
+	{ "DeadCacodemon",	"Dead Cacodemon",	"", 0 }
+	*/
+
+
+	//Ceiling actors not supported yet.
+	// That's not all of them.
+	/*
+	{ "BloodyTwitch",	"Living Hanging Body",		"GOR1A0", 68 },
+	{ "Meat2",			"Hanging Body",				"GOR2A0", 84 },
+	{ "Meat3",			"Hanging Body 2",			"GOR3A0", 84 },
+	{ "Meat4",			"Hanging Body 3",			"GOR4A0", 68 },
+	{ "Meat5",			"Hanging Body 4",			"GOR4A0", 52 },
+	{ "NonsolidTwitch",	"Nonsolid Living Hanging Body",	"GOR1A0", 0 },
+	{ "NonsolidMeat2",	"Nonsolid Hanging Body",		"GOR2A0", 0 },
+	{ "NonsolidMeat3",	"Nonsolid Hanging Body 2",		"GOR3A0", 0 },
+	{ "NonsolidMeat4",	"Nonsolid Hanging Body 3",		"GOR4A0", 0 },
+	{ "NonsolidMeat5",	"Nonsolid Hanging Body 4",		"GOR4A0", 0 },
+	*/
+	//{ "HangNoGuts",     "Hanging
+};

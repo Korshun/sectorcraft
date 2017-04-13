@@ -1,0 +1,20 @@
+map SCRAFT01 "SectorCraft Small"
+{
+	levelnum = 101
+	sky1 = "SKY1"
+	music = "D_RAVE"
+}
+
+map SCRAFT02 "SectorCraft Medium"
+{
+	levelnum = 102
+	sky1 = "SKY1"
+	music = "D_RAVE"
+}
+
+map SCRAFT03 "SectorCraft Big"
+{
+	levelnum = 103
+	sky1 = "SKY1"
+	music = "D_RAVE"
+}

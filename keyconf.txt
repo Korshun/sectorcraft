@@ -1,0 +1,31 @@
+ClearPlayerClasses
+AddPlayerClass SectorCrafter
+AddPlayerClass SC_Doomer
+
+AddKeySection "SectorCraft" SectorCraft
+
+AddMenuKey "Copy" sccopy
+alias sccopy "puke 1"
+DefaultBind c sccopy
+
+AddMenuKey "Special button" +scspecial
+alias +scspecial "puke 2 1"
+alias -scspecial "puke 2 0"
+DefaultBind v +scspecial
+DefaultBind mouse4 +scspecial
+
+AddMenuKey "Fly" scfly
+alias scfly "puke 3"
+DefaultBind o scfly
+
+
+alias scsavemap     "puke 231 0 1"
+alias scloadmap     "puke 231 1 1"
+alias scloadmap_old "puke 231 1 0"
+alias scpurgecvars  "puke 231 2 0"
+
+alias scpause  "puke 232"
+alias scstop   "puke 232"
+alias scresume "puke 233"
+
+alias scmapinfo "puke 234"

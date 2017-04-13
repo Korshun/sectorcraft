@@ -1,0 +1,69 @@
+function int GetFadeColor(int s, int component)
+{
+	return WorldFadeColors[s][component];
+}
+
+// Returns VALUE_UNCHANGED or 1.
+function int SetFadeColor(int s, int r, int g, int b)
+{
+	if (!CheckLock(s))
+		return VALUE_UNCHANGED;
+
+	if
+	(
+		   WorldFadeColors[s][COLOR_RED]   == r
+		&& WorldFadeColors[s][COLOR_GREEN] == g
+		&& WorldFadeColors[s][COLOR_BLUE]  == b
+	)
+		return VALUE_UNCHANGED;
+
+	WorldFadeColors[s][COLOR_RED]   = r;
+	WorldFadeColors[s][COLOR_GREEN] = g;
+	WorldFadeColors[s][COLOR_BLUE]  = b;
+
+	Sector_SetFade(s, r, g, b);
+	return 1;
+}
+
+// Set fade color.
+script 70 (void)
+{
+	SetCursorActor(0);
+	if (!Target())
+		terminate;
+	SetActivatorToTarget(0);
+
+	int r = CheckInventory("SC_SelectedFadeR");
+	int g = CheckInventory("SC_SelectedFadeG");
+	int b = CheckInventory("SC_SelectedFadeB");
+
+	if (SetFadeColor(Target(), r, g, b) != VALUE_UNCHANGED)
+		NotifyAction(StrParam(s:"Fade color changed to",
+			s:" \cg", d:r, s:" \cd", d:g, s:" \ch", d:b, s:"\c-."));
+}
+
+// Read fade color.
+script 71 (void)
+{
+	SetCursorActor(0);
+	if (!Target())
+		terminate;
+	SetActivatorToTarget(0);
+
+	int r = GetFadeColor(Target(), COLOR_RED);
+	int g = GetFadeColor(Target(), COLOR_GREEN);
+	int b = GetFadeColor(Target(), COLOR_BLUE);
+
+	TakeInventory("SC_SelectedFadeR", 9999);
+	TakeInventory("SC_SelectedFadeG", 9999);
+	TakeInventory("SC_SelectedFadeB", 9999);
+
+	GiveInventory("SC_SelectedFadeR", r);
+	GiveInventory("SC_SelectedFadeG", g);
+	GiveInventory("SC_SelectedFadeB", b);
+
+	GiveInventory("SC_SelectedFadeCopied", 1); // Notify fade color picker about copied fade color.
+
+	NotifyMode(StrParam(s:"Selected fade color ",
+			s:" \cg", d:r, s:" \cd", d:g, s:" \ch", d:b, s:"\c-."));
+}

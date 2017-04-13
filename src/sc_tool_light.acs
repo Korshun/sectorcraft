@@ -1,0 +1,71 @@
+// Just for convention :).
+function int GetLightLevel(int s)
+{
+	return GetSectorLightLevel(s);
+}
+
+function int SetLightLevel(int s, int light)
+{
+	if (!CheckPermission(s))
+		return VALUE_UNCHANGED;
+
+	light = clamp(light, 0, 255);
+	if (light == GetLightLevel(s))
+		return VALUE_UNCHANGED;
+
+	Light_ChangeToValue(s, light);
+	return light;
+}
+
+// Change light level.
+script 20 (int diff)
+{
+	SetCursorActor(0);
+	if (!Target())
+		terminate;
+	SetActivatorToTarget(0);
+
+	int light = GetLightLevel(Target());
+	if (light == 255)
+		light = 256; // Just for rounder numbers :).
+	light += diff;
+
+	int newlight = SetLightLevel(Target(), light);
+	if (newlight == VALUE_UNCHANGED)
+		terminate;
+
+	str action;
+	if (diff > 0)
+		action = "raised";
+	else
+		action = "lowered";
+
+	// Display results.
+	NotifyAction(StrParam(s:"Light level ", s:action, s:" to ", d:newlight, s:"."));
+}
+
+// Copy light level.
+script 21 (void)
+{
+	SetCursorActor(0);
+	if (!Target())
+		terminate;
+	SetActivatorToTarget(0);
+
+	int l = GetSectorLightLevel(Target());
+	Save("SC_SelectedLightLevel", l);
+	NotifyCopy(StrParam(s:"Copied light level \cf", d:l, s:"\c-."));
+}
+
+// Paste light level.
+script 22 (void)
+{
+	SetCursorActor(0);
+	if (!Target())
+		terminate;
+	SetActivatorToTarget(0);
+
+	int newlightlevel = SetLightLevel(Target(), CheckInventory("SC_SelectedLightLevel"));
+	if (newlightlevel != VALUE_UNCHANGED)
+		NotifyAction(StrParam(s:"Light level set to ", d:newlightlevel));
+}

@@ -1,0 +1,80 @@
+// Lock tool to manage locks.
+
+/*
+
+// Place a lock marker.
+script 90 (int markernum)
+{
+	SetCursorActor(0);
+	if (!Target())
+		terminate;
+	SetActivatorToTarget(0);
+
+	// Do not allow intersecting locks.
+	if (!CheckLock(Target()))
+		terminate;
+
+	int lockvar;
+	if (markernum == 0)
+		lockvar = "SC_LockMarker1";
+	else
+		lockvar = "SC_LockMarker2";
+
+	int oldmarker = CheckInventory(lockvar) - 1; 
+	if (oldmarker != 0)
+	{
+		// Remove the old marker.
+		RemoveLockMarker(oldmarker);
+	}
+
+	PlaceLockMarker(Target());
+	TakeInventory(lockvar, 99999);
+	GiveInventory(lockvar, Target() + 1);
+
+	NotifyLock(StrParam(s:"Marker ", d:markernum + 1, s:": \ch(",
+		d:TileX(Target()), s:"; ", d:TileY(Target()), s:")\c-."));
+}
+
+// Create the lock.
+script 91 (void)
+{
+	SetCursorActor(0);
+	if (!Target())
+		terminate;
+	SetActivatorToTarget(0);
+
+	int s1 = CheckInventory("SC_LockMarker1");
+	int s2 = CheckInventory("SC_LockMarker2");
+
+	RemoveLockMarker(s1);
+	RemoveLockMarker(s2);
+
+	int left   = min(TileX(s1), TileX(s2));
+	int right  = max(TileX(s1), TileX(s2));
+	int bottom = min(TileY(s1), TileY(s2));
+	int top    = max(TileY(s1), TileY(s2));
+
+	AddLock(left, bottom, right, top);
+}
+
+// Delete a lock.
+script 92 (void)
+{
+	SetCursorActor(0);
+	if (!Target())
+		terminate;
+	SetActivatorToTarget(0);
+
+	int lock = GetTileLock(Target());
+	if (lock == -1)
+	{
+		NotifyAction("No lock to delete.");
+		terminate;
+	}
+
+	RemoveLock(lock);
+}
+
+
+
+*/

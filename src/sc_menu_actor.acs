@@ -1,0 +1,307 @@
+//===========================
+// ACTOR SPAWN MENU
+//===========================
+
+// There may be less actors on a page than this.
+#define ACTORS_PER_PAGE 36
+#define NUM_ACTOR_PAGES 6
+
+int PageBounds[NUM_ACTOR_PAGES + 2];
+
+// Actor cathegories.
+int cat_delactor;
+int cat_ammo;
+int cat_weapons;
+int cat_healtharmor;
+int cat_special;
+int cat_spheres;
+int cat_runes;
+int cat_monsters;
+int cat_nature;
+int cat_lightsource;
+int cat_hell;
+int cat_smallgore;
+int cat_spikes;
+int cat_fountains;
+int cat_colorstuff;
+int cat_skulltag;
+
+function int CurrentActorPage(int index)
+{
+	for (int i = 0; i < NUM_ACTOR_PAGES; i++)
+	{
+		if (index < PageBounds[i + 1])
+			return i;
+	}
+
+	return 0;
+}
+
+
+// Main menu script
+script 13 (int player) CLIENTSIDE
+{
+	if (!BeginMenu(player))
+		terminate;
+
+	int copied = -1;
+	int index = -1;
+
+	// Initialize some info variables.
+	// Stupid ACS doesn't allow expressions in #define.
+	cat_delactor    = 1;
+	cat_ammo        = cat_delactor + NUM_AMMOS;
+	cat_weapons     = cat_ammo + NUM_WEAPONS;
+	cat_healtharmor = cat_weapons + NUM_HEALTHARMOR;
+	cat_special     = cat_healtharmor + NUM_SPECIAL;
+	cat_spheres     = cat_special + NUM_SPHERES;
+	cat_runes       = cat_spheres + NUM_RUNES;
+	cat_monsters    = cat_runes + NUM_MONSTERS;
+	cat_nature		= cat_monsters + NUM_NATURE;
+	cat_lightsource = cat_nature + NUM_LIGHTSOURCE;
+	cat_hell		= cat_lightsource + NUM_HELL;
+	cat_smallgore	= cat_hell + NUM_SMALLGORE;
+	cat_spikes		= cat_smallgore + NUM_SPIKES;
+	cat_fountains	= cat_spikes + NUM_FOUNTAINS;
+	cat_colorstuff	= cat_fountains + NUM_COLORSTUFF;
+	cat_skulltag	= cat_colorstuff + NUM_SKULLTAG;
+
+
+	// Page boundary indices.
+	PageBounds[0] = 0;
+	PageBounds[1] = cat_healtharmor;
+	PageBounds[2] = cat_runes + 8; // Stop at "Spectre".
+	PageBounds[3] = cat_nature + 9;
+	PageBounds[4] = cat_smallgore;
+	PageBounds[5] = cat_colorstuff;
+	PageBounds[6] = cat_skulltag;
+
+	int oldindex = -1;
+	int buttons = 0;
+	int count = 0;
+	while (!(buttons & BT_USE) && !(buttons & BT_ATTACK))
+	{
+		// Update current index from inventory if the menu has just began
+		// or if Copy Button has just been pressed.
+		if (CheckInventory("SC_SelectedActorCopied") != copied)
+		{
+			copied = CheckInventory("SC_SelectedActorCopied");
+			index = CheckInventory("SC_SelectedActor");
+		}
+
+		buttons = GetPlayerInput(-1, INPUT_BUTTONS);
+		int page = CurrentActorPage(index);
+
+		if (!(count % 3)) // Poll input with lower frequency.
+		{
+			if (buttons & BT_BACK)
+				if (index >= NUM_ACTORS - 1)
+					index = 0;
+				else
+					index++;
+
+			if (buttons & BT_FORWARD)
+				if (index <= 0)
+					index = NUM_ACTORS - 1;
+				else
+					index--;
+		}
+
+		if (!(count % 4)) // Poll input with lower frequency.
+		{
+			if (buttons & BT_LEFT || buttons & BT_MOVELEFT)
+				if (page > 0)
+				{
+					index -= PageBounds[page] - PageBounds[page - 1];
+					if (index < PageBounds[page - 1])
+						index = PageBounds[page - 1];
+				}
+			if (buttons & BT_RIGHT || buttons & BT_MOVERIGHT)
+				if (page < NUM_ACTOR_PAGES - 1)
+				{
+					index += PageBounds[page + 1] - PageBounds[page];
+					if (index > PageBounds[page + 2])
+						index = PageBounds[page + 2] - 1;
+				}
+
+		}
+
+		if (index != oldindex)
+		{
+			DrawActorMenu(index);
+			oldindex = index;
+		}
+		count++;
+		Delay(1);
+	}
+
+	ConsoleCommand(StrParam(s:"puke 14 ", d:index));
+	ClearActorMenu();
+	EndMenu();
+}
+
+// End actor menu on the server.
+script 14 (int actor) NET
+{
+	UnlockPlayer();
+	TakeInventory("SC_MenuOpened", 1);
+
+	TakeInventory("SC_SelectedActor", 9999);
+	GiveInventory("SC_SelectedActor", actor);
+}
+
+function void DrawActorMenu(int index)
+{
+	SetHudSize(480, 360, true);
+
+	// Select which page to draw.
+
+	int page = CurrentActorPage(index);
+
+	int start = PageBounds[page];
+	int end   = PageBounds[page + 1];
+	int numitems = end - start;
+
+	// Draw all actor names.
+	SetFont("SMALLFONT");
+	for (int i = 0; i < ACTORS_PER_PAGE; i++)
+	{
+		int color;
+		int spacing;
+
+		if (i >= numitems)
+		{
+			// Empty hudmessage.
+			HudMessage(s:""; HUDMSG_PLAIN, HID_MENU + i, 0, 0, 0, 0);
+			continue;
+		}
+
+		int a = start + i;
+		if (a == 0) // Special "Delete Actor" actor.
+		{
+			color = CR_RED;
+			spacing = 0;
+		}
+		else if (a < cat_ammo)
+		{
+			color = CR_YELLOW;
+			spacing = 1;
+		}
+		else if (a < cat_weapons)
+		{
+			color = CR_ORANGE;
+			spacing = 2;
+		}
+		else if (a < cat_healtharmor)
+		{
+			color = CR_GREEN;
+			spacing = 3;
+		}
+		else if (a < cat_special)
+		{
+			color = CR_TAN;
+			spacing = 0; // New page.
+		}
+		else if (a < cat_spheres)
+		{
+			color = CR_BLUE;
+			spacing = 1;
+		}
+		else if (a < cat_runes)
+		{
+			color = CR_DARKGREEN;
+			spacing = 2;
+		}
+		else if (a < cat_runes + 8)
+		{
+			color = CR_RED;
+			spacing = 3;
+		}
+		else if (a < cat_monsters)
+		{
+			color = CR_RED;
+			spacing = 0; // New page.
+		}
+		else if (a < cat_nature)
+		{
+			color = CR_BROWN;
+			spacing = 1;
+		}
+		else if (a < cat_nature + 9)
+		{
+			color = CR_YELLOW;
+			spacing = 2;
+		}
+		else if (a < cat_lightsource)
+		{
+			color = CR_YELLOW;
+			spacing = -2; // New page.
+		}
+		else if (a < cat_hell)
+		{
+			color = CR_RED;
+			spacing = -1; // New page.
+		}
+		else if (a < cat_smallgore)
+		{
+			color = CR_BRICK;
+			spacing = 0;
+		}
+		else if (a < cat_spikes)
+		{
+			color = CR_BRICK;
+			spacing = 0; // New page.
+		}
+		else if (a < cat_fountains)
+		{
+			color = CR_BLUE;
+			spacing = 1;
+		}
+		else if (a < cat_colorstuff)
+		{
+			color = CR_WHITE;
+			spacing = 2;
+		}
+		else if (a < cat_skulltag)
+		{
+			color = CR_BLUE;
+			spacing = 0; // New page.
+		}
+
+		if (a == index)
+			color = CR_GOLD; // Currently selected item.
+
+		HudMessage(s:Actors[a][ACTOR_DISPLAYNAME]; HUDMSG_PLAIN, HID_MENU + i,
+			color, 30.1, 25.0 + 8.0 * i + 8.0 * spacing, 0);
+	}
+
+
+	// Draw sprite.
+	if (index == 0) // "Delete Actor" actor.
+	{
+		SetFont("BIGFONT");
+		HudMessage(s:"DELETE"; HUDMSG_PLAIN, HID_MENU - 1, CR_RED, //32.0 * 7, 24.0 * 5, 0);
+															 48.0 * 8, 36.0 * 6, 0);
+	}
+	else
+	{
+		str sprite = Actors[index][ACTOR_SPRITE];
+		if (sprite != "")
+		{
+			SetFont(Actors[index][ACTOR_SPRITE]);
+			HudMessage(s:"A"; HUDMSG_PLAIN, HID_MENU - 1, CR_RED, //32.0 * 7, 24.0 * 5, 0);
+																 48.0 * 8, 36.0 * 6, 0);
+		}
+		else
+			HudMessage(s:""; HUDMSG_PLAIN, HID_MENU - 1, CR_RED, 0, 0, 0);
+	}
+}
+
+function void ClearActorMenu(void)
+{
+	HudMessage(s:""; HUDMSG_PLAIN, HID_MENU - 1, 0, 0, 0, 0);
+
+	for (int i = 0; i < ACTORS_PER_PAGE; i++)
+		HudMessage(s:""; HUDMSG_PLAIN, HID_MENU + i, 0, 0, 0, 0);
+	SetHudSize(0, 0, 0);
+}

@@ -1,0 +1,228 @@
+//============================
+// MAP SAVING/LOADING CONTROLS
+//============================
+
+#define MAPOP_SAVE 0
+#define MAPOP_LOAD 1
+#define MAPOP_PURGE 2
+
+str MapOpNames[3] =
+{
+	"saving",
+	"loading",
+	"cvar purging"
+};
+
+
+// Main work script.
+int WorkScriptIsRunning = false;
+int WorkScriptIsPaused  = false;
+script 230 (int op, int use_db)
+{
+	// Set up.
+	UseDatabase = use_db;
+	
+	// Determine region to work on.
+	int width;
+	int height;
+	if (op == MAPOP_LOAD && UseDatabase)
+	{
+		int version = GetDBEntry(MapNamespace, "scversion");
+		if (!version)
+		{
+			Log(s:"SECTORCRAFT: This database doen't contain a sectorcraft map.");
+			Print(s:"This database doen't contain a sectorcraft map.");
+			terminate;
+		}
+		
+		width  = GetDBEntry(MapNamespace, "mapwidth");
+		height = GetDBEntry(MapNamespace, "mapheight");
+		
+		if (width > MapWidth || height > MapHeight)
+		{
+			width  = MapWidth;
+			height = MapHeight;
+		
+			Log(s:"SECTORCRAFT: Map in db is too big. Beginning in 5 seconds.");
+			PrintBold(s:"\cgWarning: \c-the map in database is too big.\n\nBeginning in \cg5\c- seconds\n\nuse \cgscpause \c-to cancel.");
+			Delay(35);
+			
+			Log(s:"SECTORCRAFT: Map in db is too big. Beginning in 4 seconds.");
+			PrintBold(s:"\cgWarning: \c-the map in database is too big.\n\nBeginning in \cg4\c- seconds\n\nuse \cgscpause \c-to cancel.");
+			Delay(35);
+			
+			Log(s:"SECTORCRAFT: Map in db is too big. Beginning in 3 seconds.");
+			PrintBold(s:"\cgWarning: \c-the map in database is too big.\n\nBeginning in \cg3\c- seconds\n\nuse \cgscpause \c-to cancel.");
+			Delay(35);
+			
+			Log(s:"SECTORCRAFT: Map in db is too big. Beginning in 2 seconds.");
+			PrintBold(s:"\cgWarning: \c-the map in database is too big.\n\nBeginning in \cg2\c- seconds\n\nuse \cgscpause \c-to cancel.");
+			Delay(35);
+			
+			Log(s:"SECTORCRAFT: Map in db is too big. Beginning in 1 second.");
+			PrintBold(s:"\cgWarning: \c-the map in database is too big.\n\nBeginning in \cg1\c- second\n\nuse \cgscpause \c-to cancel.");
+			Delay(35);
+		}
+	}
+	else if (op == MAPOP_PURGE)
+	{
+		width  = 128;
+		height = 128;
+	}
+	else
+	{
+		width  = MapWidth;
+		height = MapHeight;
+	}
+	
+	// Determine map version.
+	if (op == MAPOP_SAVE)
+	{
+		MapVersion = SC_VERSION;
+	}
+	else if (op == MAPOP_LOAD)
+	{
+		if (UseDatabase)
+			MapVersion = GetDBEntry(MapNamespace, "scversion");
+		else
+			MapVersion = 0;
+	}
+	
+	Log(s:"SECTORCRAFT: Map ", s:MapOpNames[op], s:" initiated.");
+	PrintBold(s:"\cdMap ", s:MapOpNames[op], s:" initiated.");
+	
+	// Begin map loading.
+	WorkScriptIsRunning = true;
+	LoadMapDefaults(); 
+	
+	// Begin transaction and write meta info to database.
+	if (op == MAPOP_SAVE && UseDatabase)
+	{
+		BeginDBTransaction();
+		SetDBEntry(MapNamespace, "scversion", SC_VERSION);
+		SetDBEntry(MapNamespace, "mapwidth",  MapWidth);
+		SetDBEntry(MapNamespace, "mapheight", MapHeight);
+	}
+		
+
+	// <loading/saving> map: 1/16384
+	DisplayProgress(1, width * height, op); 
+	
+	// Main loop.
+	int counter = 0;	
+	for (CurrentSectorY = 0; CurrentSectorY < height; CurrentSectorY++)
+	for (CurrentSectorX = 0; CurrentSectorX < width;  CurrentSectorX++)
+	{
+		switch (op)
+		{
+		case MAPOP_SAVE:
+			SaveSector();
+			break;
+		case MAPOP_LOAD:
+			LoadSector();
+			break;
+		case MAPOP_PURGE:
+			PurgeSector();
+		}
+		
+		counter++;
+		
+		// Map saving speed.
+		int speed;
+		if (op == MAPOP_LOAD)
+			speed = GetCVar("sc_loadspeed");
+		else
+			speed = GetCVar("sc_savespeed");
+		if (speed <= 0)
+			speed = 1;
+		
+		if (counter % speed == 0)
+		{
+			if (counter % (speed * 16) == 0)
+				DisplayProgress(counter, width * height, op);
+				
+			Delay(1);
+		}
+	}
+	
+	if (op == MAPOP_SAVE && UseDatabase)
+		EndDBTransaction();
+		
+	// Remove old message.
+	HudMessageBold(s:""; HUDMSG_PLAIN, HID_MAPSAVE, CR_GOLD, 0.5, 0.4, 0);
+		
+	Log(s:"SECTORCRAFT: Map ", s:MapOpNames[op], s:" has finished.");
+	PrintBold(s:"\cdMap ", s:MapOpNames[op], s:" has finished.");
+	WorkScriptIsRunning = false;
+}
+
+function void DisplayProgress(int count, int maxcount, int op)
+{
+	SetFont("SMALLFONT");
+	HudMessageBold(s:MapOpNames[op], s:" map: ", d:count, s:"/", d:maxcount;
+		HUDMSG_PLAIN, HID_MAPSAVE, CR_GOLD, 0.5, 0.4, 0);
+}
+
+// Map operation launcher.
+script 231 (int op, int use_db)
+{
+	if (op < 0 || op > 2)
+		terminate;
+	
+	if (WorkScriptIsRunning && !WorkScriptIsPaused)
+	{
+		Log      (s:"SECTORCRAFT: Map operation is in progess. Use \"scpause\" first.");
+		PrintBold(s:"Map operation is in progess.\n\nUse \cdscpause\c- first.");
+		terminate;
+	}
+	
+	ACS_Terminate(230, 0);
+	ACS_Execute(230, 0, op, use_db);
+}
+
+// scpause: pause map operation"
+script 232 (void)
+{
+	ACS_Suspend(230, 0);
+	WorkScriptIsPaused = true;
+	
+	Log      (s:"SECTORCRAFT: Map operation paused.");
+	PrintBold(s:"\cdMap operation paused.");
+
+	// Remove old message.
+	HudMessageBold(s:""; HUDMSG_PLAIN, HID_MAPSAVE, CR_GOLD, 0.5, 0.4, 0);
+}
+
+// scresume: Resume map operation.
+script 233 (void)
+{
+	if (WorkScriptIsRunning)
+	{
+		ACS_Execute(230, 0);
+		Log      (s:"SECTORCRAFT: Map operation resumed.");
+		PrintBold(s:"\cdMap operation resumed.");
+		WorkScriptIsPaused = false;
+	}
+}
+
+// scmapinfo: Display info about map in DB.
+script 234 (void)
+{
+	int version = GetDBEntry(MapNamespace, "scversion");
+	int width   = GetDBEntry(MapNamespace, "mapwidth");
+	int height  = GetDBEntry(MapNamespace, "mapheight");
+	
+	if (version)
+	{
+		Log(s:"SECTORCRAFT: The current database contains a ", d:width, s:"x", d:height, s:" map");
+		if (PlayerNumber() >= 0)
+			Print(s:"The current database contains a \cd", d:width, s:"x", d:height, s:"\c- map");
+	}
+	else
+	{
+		Log(s:"SECTORCRAFT: The current database does not contain a map");
+		if (PlayerNumber() >= 0)
+			Print(s:"The current database does not contain a map");
+	}
+}
+

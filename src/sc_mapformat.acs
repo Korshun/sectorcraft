@@ -1,0 +1,315 @@
+//===========================
+// MAP SAVING/LOADING
+//===========================
+
+int MapVersion;
+int MapNamespace = "sectorcraftmap";
+int UseDatabase;
+
+int CurrentSectorX;
+int CurrentSectorY;
+
+int default_h;
+int default_c;
+int default_f;
+int default_a;
+
+int default_tf;
+int default_tl1;
+int default_tl2;
+int default_tu1;
+int default_tu2;
+
+int default_fo;
+int default_co;
+
+function void LoadMapDefaults(void)
+{
+	default_h = Pack16(0, 256); // Heights.
+	default_c = Pack8(255, 255, 255, 0); // Color.
+	default_f = Pack8(0, 0, 0, 224); // Fog and light level.
+	default_a = Pack16(0, 0); // Actors.
+
+	if (MapVersion >= 080300)
+		default_tf = Pack16(-(GRASS1_INDEX + 1), -(F_SKY1_INDEX + 1));
+	else
+		default_tf  = Pack16(GRASS1_INDEX, F_SKY1_INDEX);		
+		
+	default_tl1 = Pack16(GRASS1_INDEX, GRASS1_INDEX);
+	default_tl2 = Pack16(GRASS1_INDEX, GRASS1_INDEX);
+	default_tu1 = Pack16(F_SKY1_INDEX, F_SKY1_INDEX);
+	default_tu2 = Pack16(F_SKY1_INDEX, F_SKY1_INDEX);
+	
+	// Offsets.
+	default_fo = Pack16(0, 0);
+	default_co = Pack16(0, 0);
+}
+
+function void LoadSector(void)
+{
+	int s = TileTag(CurrentSectorX, CurrentSectorY);
+
+	int h = LoadProp("h", default_h);
+	int c = LoadProp("c", default_c);
+	int f = LoadProp("f", default_f);
+	int a = LoadProp("a", default_a);
+
+	int tf  = LoadProp("tf",  default_tf);
+
+	int fo = LoadProp("fo", default_fo);
+	int co = LoadProp("co", default_co);
+
+	SetHeights   (s, Unpack161(h), Unpack162(h));
+	SetLightLevel(s, Unpack84(f));
+	SetLightColor(s, Unpack81(c), Unpack82(c), Unpack83(c));
+	SetFadeColor (s, Unpack81(f), Unpack82(f), Unpack83(f));
+	SetFloorActor(s, Unpack161(a), 0);
+
+	// Set floor and ceiling offsets.
+	SetTextureOffset(s, 0, FLOOR,   Unpack161(fo), Unpack162(fo));
+	SetTextureOffset(s, 0, CEILING, Unpack161(co), Unpack162(co));
+
+	int ftex = Unpack161(tf);
+	int ctex = Unpack162(tf);
+	
+	// Set lower textures.
+	if (ftex < 0)
+	{
+		// If texture index is negative, lower textures
+		// are same as floor texture.
+		ftex = -(ftex + 1);
+		SetTexture(s, 0, FLOOR, ftex);
+		SetTexture(s, 1, FLOOR, ftex);
+		SetTexture(s, 2, FLOOR, ftex);
+		SetTexture(s, 3, FLOOR, ftex);
+		SetTexture(s, 4, FLOOR, ftex);
+	}	
+	else
+	{
+		// Load lower textures the normal way.
+		int tl1 = LoadProp("tl1", default_tl1);
+		int tl2 = LoadProp("tl2", default_tl2);
+		SetTexture(s, 0, FLOOR, ftex);
+		SetTexture(s, 1, FLOOR, Unpack161(tl1));
+		SetTexture(s, 2, FLOOR, Unpack162(tl1));
+		SetTexture(s, 3, FLOOR, Unpack161(tl2));
+		SetTexture(s, 4, FLOOR, Unpack162(tl2));
+	}
+
+	// Set upper textures.
+	if (ctex < 0)
+	{
+		// If texture index is negative, upper textures
+		// are same as ceiling texture.
+		ctex = -(ctex + 1);
+		SetTexture(s, 0, CEILING, ctex);
+		SetTexture(s, 1, CEILING, ctex);
+		SetTexture(s, 2, CEILING, ctex);
+		SetTexture(s, 3, CEILING, ctex);
+		SetTexture(s, 4, CEILING, ctex);
+	}
+	else
+	{
+		// Load upper textures the normal way.
+		int tu1 = LoadProp("tu1", default_tu1);
+		int tu2 = LoadProp("tu2", default_tu2);
+		SetTexture(s, 0, CEILING, ctex);
+		SetTexture(s, 1, CEILING, Unpack161(tu1));
+		SetTexture(s, 2, CEILING, Unpack162(tu1));
+		SetTexture(s, 3, CEILING, Unpack161(tu2));
+		SetTexture(s, 4, CEILING, Unpack162(tu2));
+	}
+}
+
+function void SaveSector(void)
+{
+	int s = TileTag(CurrentSectorX, CurrentSectorY);
+
+	// Pack heights.
+	int packed_height = Pack16
+	(
+		GetFloorHeight(s),
+		GetCeilingHeight(s)
+	);		
+
+	// Pack color. Also pack desaturation when it is done.
+	int packed_color = Pack8
+	(
+		WorldLightColors[s][COLOR_RED],
+		WorldLightColors[s][COLOR_GREEN],
+		WorldLightColors[s][COLOR_BLUE],
+		0
+	);
+
+	// Pack fade color and light level.
+	int packed_fade_l = Pack8
+	(
+		WorldFadeColors[s][COLOR_RED],
+		WorldFadeColors[s][COLOR_GREEN],
+		WorldFadeColors[s][COLOR_BLUE],
+		GetLightLevel(s)
+	);
+
+	// Pack floor and ceiling actors? Whatever.
+	int packed_actors = Pack16
+	(
+		GetFloorActor(s),
+		0
+	);
+
+	// Pack offsets.
+	int offset_floor  = Pack16(WorldTextureOffsets[s][0][FLOOR][OFFSET_X], WorldTextureOffsets[s][0][FLOOR][OFFSET_Y]);
+	int offset_lower1 = Pack16(WorldTextureOffsets[s][1][FLOOR][OFFSET_X], WorldTextureOffsets[s][1][FLOOR][OFFSET_Y]);
+	int offset_lower2 = Pack16(WorldTextureOffsets[s][2][FLOOR][OFFSET_X], WorldTextureOffsets[s][2][FLOOR][OFFSET_Y]);
+	int offset_lower3 = Pack16(WorldTextureOffsets[s][3][FLOOR][OFFSET_X], WorldTextureOffsets[s][3][FLOOR][OFFSET_Y]);
+	int offset_lower4 = Pack16(WorldTextureOffsets[s][4][FLOOR][OFFSET_X], WorldTextureOffsets[s][4][FLOOR][OFFSET_Y]);
+
+	int offset_ceil   = Pack16(WorldTextureOffsets[s][0][CEILING][OFFSET_X], WorldTextureOffsets[s][0][CEILING][OFFSET_Y]);
+	int offset_upper1 = Pack16(WorldTextureOffsets[s][1][CEILING][OFFSET_X], WorldTextureOffsets[s][2][CEILING][OFFSET_Y]);
+	int offset_upper2 = Pack16(WorldTextureOffsets[s][1][CEILING][OFFSET_X], WorldTextureOffsets[s][2][CEILING][OFFSET_Y]);
+	int offset_upper3 = Pack16(WorldTextureOffsets[s][1][CEILING][OFFSET_X], WorldTextureOffsets[s][2][CEILING][OFFSET_Y]);
+	int offset_upper4 = Pack16(WorldTextureOffsets[s][1][CEILING][OFFSET_X], WorldTextureOffsets[s][2][CEILING][OFFSET_Y]);
+		
+	// Pack lower textures.
+	int texpair_lower1;
+	int texpair_lower2;
+	int f0 = WorldTextures[s][0][FLOOR];
+	int f1 = WorldTextures[s][1][FLOOR];
+	int f2 = WorldTextures[s][2][FLOOR];
+	int f3 = WorldTextures[s][3][FLOOR];
+	int f4 = WorldTextures[s][4][FLOOR];
+	if (f0 == f1 && f1 == f2 && f2 == f3 && f3 == f4)
+	{
+		// If lower textres are the same as floor texture, do not store them.
+		// Instead, just invert the texture number.
+		// (I should have made this a bit operation instead of inversion)
+		f0 = -(f0 + 1);
+		texpair_lower1 = default_tl1;
+		texpair_lower2 = default_tl2;
+	}
+	else
+	{
+		// Save lower textures the normal way.
+		texpair_lower1 = Pack16(f1, f2);
+		texpair_lower2 = Pack16(f3, f4);
+	}
+
+	// Pack upper textures.
+	int texpair_upper1;
+	int texpair_upper2;
+	int c0 = WorldTextures[s][0][CEILING];
+	int c1 = WorldTextures[s][1][CEILING];
+	int c2 = WorldTextures[s][2][CEILING];
+	int c3 = WorldTextures[s][3][CEILING];
+	int c4 = WorldTextures[s][4][CEILING];
+	if (c0 == c1 && c1 == c2 && c2 == c3 && c3 == c4)
+	{
+		// If upper textres are the same as ceiling texture, do not store them.
+		// Instead, just invert the texture number.
+		// (I should have made this a bit operation instead of inversion)
+		c0 = -(c0 + 1);
+		texpair_upper1 = default_tu1;
+		texpair_upper2 = default_tu2;
+	}
+	else
+	{
+		// Save upper textures the normal way.
+		texpair_upper1 = Pack16(c1, c2);
+		texpair_upper2 = Pack16(c3, c4);
+	}
+		
+	// Pack floor and ceiling textures.
+	int texpair_flats  = Pack16(f0, c0);
+
+	SaveProp("h", packed_height, default_h);
+	SaveProp("c", packed_color,  default_c);
+	SaveProp("f", packed_fade_l, default_f);
+	SaveProp("a", packed_actors, default_a);
+
+	SaveProp("tf",  texpair_flats,  default_tf);
+	SaveProp("tl1", texpair_lower1, default_tl1);
+	SaveProp("tl2", texpair_lower2, default_tl2);
+	SaveProp("tu1", texpair_upper1, default_tu1);
+	SaveProp("tu2", texpair_upper2, default_tu2);
+
+	SaveProp("fo", offset_floor, default_fo);
+	SaveProp("co", offset_ceil,  default_co);
+}
+
+// Deletes the sector from the configuration file.
+function void PurgeSector(void)
+{
+	PurgeProp("h");
+	PurgeProp("c");
+	PurgeProp("f");
+	PurgeProp("a");
+
+	PurgeProp("tf");
+	PurgeProp("tl1");
+	PurgeProp("tl2");
+	PurgeProp("tu1");
+	PurgeProp("tu2");
+
+	PurgeProp("fo");
+	PurgeProp("co");
+}
+
+function str MapVarName(str name)
+{
+	return StrParam(d:CurrentSectorY, s:"_", d:CurrentSectorX, s:name);
+}
+
+function void SaveProp(str name, int value, int def)
+{
+	name = MapVarName(name);
+
+	if (value == def)
+	{
+		if (UseDatabase)
+		{
+			// Dunno how to remove variables from the database.
+			SetDBEntry(MapNamespace, name, 0);
+		}
+		else
+		{
+			ConsoleCommand(StrParam(s:"unset ", s:name));
+		}
+
+		return;
+	}
+
+	if (value == 0)
+		value = def;
+		
+	if (UseDatabase)
+	{
+		SetDBEntry(MapNamespace, name, value);
+	}
+	else
+	{
+		ConsoleCommand(StrParam(s:"set ", s:name, s:" ", d:value));
+		ConsoleCommand(StrParam(s:"archivecvar ", s:name));
+	}
+	
+}
+function int LoadProp(str name, int def)
+{
+	name = MapVarName(name);
+	
+	int value;	
+	if (UseDatabase)
+		value = GetDBEntry(MapNamespace, name);
+	else
+		value = GetCVar(name);
+
+	if (value == 0) 
+		return def;
+	else if (value == def)
+		return 0;
+	return value;
+}
+
+function void PurgeProp(str name)
+{
+	ConsoleCommand(StrParam(s:"unset ", s:MapVarName(name)));
+}

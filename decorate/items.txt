@@ -1,0 +1,178 @@
+// Make all actors have radius 15 instead of 16 to make them fit into single tile.
+
+Actor SCA_Clip : Clip replaces Clip { Radius 15 }
+Actor SCA_ClipBox : ClipBox replaces ClipBox { Radius 15 }
+Actor SCA_Shell : Shell replaces Shell { Radius 15 }
+Actor SCA_ShellBox : ShellBox replaces ShellBox { Radius 15 }
+Actor SCA_RocketAmmo : RocketAmmo replaces RocketAmmo { Radius 15 }
+Actor SCA_RocketBox : RocketBox replaces RocketBox { Radius 15 }
+Actor SCA_Cell : Cell replaces Cell { Radius 15 }
+Actor SCA_CellPack : CellPack replaces CellPack { Radius 15 }
+Actor SCA_Backpack : Backpack replaces Backpack { Radius 15 }
+
+Actor SCA_Chainsaw : Chainsaw replaces Chainsaw { Radius 15 }
+Actor SCA_Pistol : Pistol replaces Pistol { Radius 15 }
+Actor SCA_Shotgun : Shotgun replaces Shotgun { Radius 15 }
+Actor SCA_Chaingun : Chaingun replaces Chaingun { Radius 15 }
+Actor SCA_Minigun : Minigun replaces Minigun { Radius 15 }
+Actor SCA_SuperShotgun : SuperShotgun replaces SuperShotgun { Radius 15 }
+Actor SCA_RocketLauncher : RocketLauncher replaces RocketLauncher { Radius 15 }
+Actor SCA_GrenadeLauncher : GrenadeLauncher replaces GrenadeLauncher { Radius 15 }
+
+// Fix A_CheckRailReload.
+Actor SCA_RailgunLoadedAmmo : Inventory { Inventory.MaxAmount 4 }
+Actor  SCA_RailGun : RailGun replaces RailGun
+{
+	Radius 15
+	States
+	{
+	Fire:
+		RLGG E 12 A_FireRailgun
+		NULL A 0 A_TakeInventory("SCA_RailgunLoadedAmmo", 1)
+		RLGG F 6 A_JumpIfInventory("SCA_RailgunLoadedAmmo", 1, "ReloadDone")
+		RLGG G 6
+		RLGG H 6
+		RLGG I 6
+		RLGG J 6
+		RLGG K 6
+		RLGG L 6 A_GiveInventory("SCA_RailgunLoadedAmmo", 4)
+	ReloadDone:
+		RLGG A 6
+		RLGG M 0 A_ReFire
+		goto Ready
+	}
+}
+Actor SCA_PlasmaRifle : PlasmaRifle replaces PlasmaRifle { Radius 15 }
+Actor SCA_BFG9000 : BFG9000 replaces BFG9000 { Radius 15 }
+Actor SCA_BFG10K : BFG10K replaces BFG10K { Radius 15 }
+
+Actor SCA_Stimpack : Stimpack replaces Stimpack { Radius 15 }
+Actor SCA_Medikit : Medikit replaces Medikit { Radius 15 }
+Actor SCA_GreenArmor : GreenArmor replaces GreenArmor { Radius 15 }
+Actor SCA_BlueArmor : BlueArmor replaces BlueArmor { Radius 15 }
+Actor SCA_RedArmor : RedArmor replaces RedArmor { Radius 15 }
+Actor SCA_HealthBonus : HealthBonus replaces HealthBonus { Radius 15 }
+Actor SCA_ArmorBonus : ArmorBonus replaces ArmorBonus { Radius 15 }
+Actor SCA_MaxHealthBonus : MaxHealthBonus replaces MaxHealthBonus { Radius 15 }
+Actor SCA_MaxArmorBonus : MaxArmorBonus replaces MaxArmorBonus { Radius 15 }
+
+Actor SCA_RadSuit : RadSuit replaces RadSuit { Radius 15 }
+Actor SCA_Infrared : Infrared replaces Infrared { Radius 15 }
+Actor SCA_Berserk : Berserk replaces Berserk { Radius 15 }
+
+Actor SCA_Soulsphere : Soulsphere replaces Soulsphere { Radius 15 }
+Actor SCA_Megasphere : Megasphere replaces Megasphere { Radius 15 }
+Actor SCA_InvulnerabilitySphere : InvulnerabilitySphere replaces InvulnerabilitySphere { Radius 15 }
+Actor SCA_BlurSphere : BlurSphere replaces BlurSphere { Radius 15 }
+Actor SCA_InvisibilitySphere : InvisibilitySphere replaces InvisibilitySphere { Radius 15 }
+Actor SCA_TurboSphere : TurboSphere replaces TurboSphere { Radius 15 }
+Actor SCA_DoomSphere : DoomSphere replaces DoomSphere { Radius 15 }
+Actor SCA_GuardSphere : GuardSphere replaces GuardSphere { Radius 15 }
+Actor SCA_TimeFreezeSphere : TimeFreezeSphere replaces TimeFreezeSphere { Radius 15 }
+Actor SCA_RandomPowerup : RandomPowerup replaces RandomPowerup { Radius 15 }
+
+Actor SCA_StrengthRune : StrengthRune replaces StrengthRune { Radius 15 }
+Actor SCA_RageRune : RageRune replaces RageRune { Radius 15 }
+Actor SCA_DrainRune : DrainRune replaces DrainRune { Radius 15 }
+Actor SCA_SpreadRune : SpreadRune replaces SpreadRune { Radius 15 }
+Actor SCA_ResistanceRune : ResistanceRune replaces ResistanceRune { Radius 15 }
+Actor SCA_RegenerationRune : RegenerationRune replaces RegenerationRune { Radius 15 }
+Actor SCA_ProsperityRune : ProsperityRune replaces ProsperityRune { Radius 15 }
+Actor SCA_ReflectionRune : ReflectionRune replaces ReflectionRune { Radius 15 }
+Actor SCA_HighJumpRune : HighJumpRune replaces HighJumpRune { Radius 15 }
+Actor SCA_HasteRune : HasteRune replaces HasteRune { Radius 15 }
+
+Actor SCA_TechPillar : TechPillar replaces TechPillar { Radius 15 }
+Actor SCA_ExplosiveBarrel : ExplosiveBarrel replaces ExplosiveBarrel { Radius 15 }
+Actor SCA_BurningBarrel : BurningBarrel replaces BurningBarrel { Radius 15 }
+//Actor SCA_BigTree : BigTree replaces BigTree { -SHOOTABLE }
+Actor SCA_TorchTree : TorchTree replaces TorchTree { Radius 15 }
+Actor SCA_Stalagtite : Stalagtite replaces Stalagtite { Radius 15 }
+Actor SCA_Stalagmite : Stalagmite replaces Stalagmite { Radius 15 }
+
+Actor SCA_Column : Column replaces Column { Radius 15 }
+Actor SCA_RedColumn : RedColumn replaces RedColumn { Radius 15 }
+Actor SCA_BlueColumn : BlueColumn replaces BlueColumn { Radius 15 }
+Actor SCA_TechLamp2 : TechLamp2 replaces TechLamp2 { Radius 15 }
+Actor SCA_RedTechLamp2 : RedTechLamp2 replaces RedTechLamp2 { Radius 15 }
+Actor SCA_TechLamp : TechLamp replaces TechLamp { Radius 15 }
+Actor SCA_RedTechLamp : RedTechLamp replaces RedTechLamp { Radius 15 }
+Actor SCA_ShortRedTorch : ShortRedTorch replaces ShortRedTorch { Radius 15 }
+Actor SCA_ShortGreenTorch : ShortGreenTorch replaces ShortGreenTorch { Radius 15 }
+Actor SCA_ShortBlueTorch : ShortBlueTorch replaces ShortBlueTorch { Radius 15 }
+Actor SCA_ShortYellowTorch : ShortYellowTorch replaces ShortYellowTorch { Radius 15 }
+Actor SCA_ShortWhiteTorch : ShortWhiteTorch replaces ShortWhiteTorch { Radius 15 }
+Actor SCA_RedTorch : RedTorch replaces RedTorch { Radius 15 }
+Actor SCA_GreenTorch : GreenTorch replaces GreenTorch { Radius 15 }
+Actor SCA_BlueTorch : BlueTorch replaces BlueTorch { Radius 15 }
+Actor SCA_YellowTorch : YellowTorch replaces YellowTorch { Radius 15 }
+Actor SCA_WhiteTorch : WhiteTorch replaces WhiteTorch { Radius 15 }
+Actor SCA_Candlestick : Candlestick replaces Candlestick { Radius 15 }
+Actor SCA_RedCandlestick : RedCandlestick replaces RedCandlestick { Radius 15 }
+Actor SCA_BlueCandlestick : BlueCandlestick replaces BlueCandlestick { Radius 15 }
+Actor SCA_Candelabra : Candelabra replaces Candelabra { Radius 15 }
+
+Actor SCA_EvilEye : EvilEye replaces EvilEye { Radius 15 }
+Actor SCA_RedEvilEye : RedEvilEye replaces RedEvilEye { Radius 15 }
+Actor SCA_BlueEvilEye : BlueEvilEye replaces BlueEvilEye { Radius 15 }
+Actor SCA_FloatingSkull : FloatingSkull replaces FloatingSkull { Radius 15 }
+Actor SCA_FloatingBobbingSkull : FloatingBobbingSkull replaces FloatingBobbingSkull { Radius 15 }
+Actor SCA_HeadCandles : HeadCandles replaces HeadCandles { Radius 15 }
+
+Actor SCA_TallGreenColumn : TallGreenColumn replaces TallGreenColumn { Radius 15 }
+Actor SCA_TallRedColumn : TallRedColumn replaces TallRedColumn { Radius 15 }
+Actor SCA_TallGreyColumn : TallGreyColumn replaces TallGreyColumn { Radius 15 }
+Actor SCA_TallGothicColumn : TallGothicColumn replaces TallGothicColumn { Radius 15 }
+Actor SCA_ShortGreenColumn : ShortGreenColumn replaces ShortGreenColumn { Radius 15 }
+Actor SCA_ShortRedColumn : ShortRedColumn replaces ShortRedColumn { Radius 15 }
+Actor SCA_GreyColumn : GreyColumn replaces GreyColumn { Radius 15 }
+Actor SCA_SkullColumn : SkullColumn replaces SkullColumn { Radius 15 }
+Actor SCA_HeartColumn : HeartColumn replaces HeartColumn { Radius 15 }
+Actor SCA_GreyHeartColumn : GreyHeartColumn replaces GreyHeartColumn { Radius 15 }
+
+Actor SCA_Gibs : Gibs replaces Gibs { Radius 15 }
+Actor SCA_ColonGibs : ColonGibs replaces ColonGibs { Radius 15 }
+Actor SCA_MarineHelmetGibs : MarineHelmetGibs replaces MarineHelmetGibs { Radius 15 }
+Actor SCA_SmallBloodPool : SmallBloodPool replaces SmallBloodPool { Radius 15 }
+Actor SCA_BrainStem : BrainStem replaces BrainStem { Radius 15 }
+//Actor SCA_ImpHead : ImpHead replaces ImpHead { Radius 15 }
+
+Actor SCA_HeadOnAStick : HeadOnAStick replaces HeadOnAStick { Radius 15 }
+Actor SCA_HeadsOnAStick : HeadsOnAStick replaces HeadsOnAStick { Radius 15 }
+Actor SCA_DeadStick : DeadStick replaces DeadStick { Radius 15 }
+Actor SCA_LiveStick : LiveStick replaces LiveStick { Radius 15 }
+Actor SCA_ImpalingSpike   : ImpalingSpike   replaces ImpalingSpike   { Radius 15 }
+Actor SCA_ImpalingSpike2  : ImpalingSpike2  replaces ImpalingSpike2  { Radius 15 }
+Actor SCA_ImpalingSpike3  : ImpalingSpike3  replaces ImpalingSpike3  { Radius 15 }
+Actor SCA_ImpalingSpike4  : ImpalingSpike4  replaces ImpalingSpike4  { Radius 15 }
+Actor SCA_ImpalingSpike5  : ImpalingSpike5  replaces ImpalingSpike5  { Radius 15 }
+Actor SCA_ImpalingSpike6  : ImpalingSpike6  replaces ImpalingSpike6  { Radius 15 }
+Actor SCA_ImpalingSpike7  : ImpalingSpike7  replaces ImpalingSpike7  { Radius 15 }
+Actor SCA_ImpalingSpike8  : ImpalingSpike8  replaces ImpalingSpike8  { Radius 15 }
+Actor SCA_ImpalingSpike9  : ImpalingSpike9  replaces ImpalingSpike9  { Radius 15 }
+Actor SCA_ImpalingSpike10 : ImpalingSpike10 replaces ImpalingSpike10 { Radius 15 }
+Actor SCA_ImpalingSpike11 : ImpalingSpike11 replaces ImpalingSpike11 { Radius 15 }
+
+Actor SCA_RedParticleFountain : RedParticleFountain replaces RedParticleFountain { Radius 15 -NOGRAVITY -NOBLOCKMAP }
+Actor SCA_GreenParticleFountain : GreenParticleFountain replaces GreenParticleFountain { Radius 15 -NOGRAVITY -NOBLOCKMAP }
+Actor SCA_BlueParticleFountain : BlueParticleFountain replaces BlueParticleFountain { Radius 15 -NOGRAVITY -NOBLOCKMAP }
+Actor SCA_YellowParticleFountain : YellowParticleFountain replaces YellowParticleFountain { Radius 15 -NOGRAVITY -NOBLOCKMAP }
+Actor SCA_PurpleParticleFountain : PurpleParticleFountain replaces PurpleParticleFountain { Radius 15 -NOGRAVITY -NOBLOCKMAP }
+Actor SCA_BlackParticleFountain : BlackParticleFountain replaces BlackParticleFountain { Radius 15 -NOGRAVITY -NOBLOCKMAP }
+Actor SCA_WhiteParticleFountain : WhiteParticleFountain replaces WhiteParticleFountain { Radius 15 -NOGRAVITY -NOBLOCKMAP }
+
+Actor SCA_RedCard : RedCard replaces RedCard { Radius 15 }
+Actor SCA_YellowCard : YellowCard replaces YellowCard { Radius 15 }
+Actor SCA_BlueCard : BlueCard replaces BlueCard { Radius 15 }
+Actor SCA_RedSkull : RedSkull replaces RedSkull { Radius 15 }
+Actor SCA_YellowSkull : YellowSkull replaces YellowSkull { Radius 15 }
+Actor SCA_BlueSkull : BlueSkull replaces BlueSkull { Radius 15 }
+Actor SCA_RedFlag : RedFlag replaces RedFlag { Radius 15 }
+Actor SCA_BlueFlag : BlueFlag replaces BlueFlag { Radius 15 }
+Actor SCA_GreenFlag : GreenFlag replaces GreenFlag { Radius 15 }
+Actor SCA_GoldFlag : GoldFlag replaces GoldFlag { Radius 15 }
+Actor SCA_WhiteFlag : WhiteFlag replaces WhiteFlag { Radius 15 }
+
+Actor SCA_Impse : Impse replaces Impse { Radius 15 }
+Actor SCA_Hissy : Hissy replaces Hissy { Radius 15 }
+Actor SCA_HellScorePillar : HellScorePillar replaces HellScorePillar { Radius 15 }

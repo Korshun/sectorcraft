@@ -1,0 +1,85 @@
+//======================================
+// ALIGN TOOL
+//======================================
+
+Actor SC_SetAlignment : SC_ToolProjectile
+{
+	states
+	{
+	Death:
+		PUFF A 3 Bright ACS_ExecuteAlways(80, 0)
+		Stop
+	}
+}
+
+Actor SC_DragTexture : SC_ToolProjectile
+{
+	states
+	{
+	Death:
+		PUFF A 3 Bright ACS_ExecuteAlways(81, 0)
+		Stop
+	}
+}
+
+Actor SC_ReadAlignment : SC_ToolProjectile
+{
+	states
+	{
+	Death:
+		PUFF A 3 Bright ACS_ExecuteAlways(82, 0)
+		Stop
+	}
+}
+
+Actor SC_SelectedOffsetX : Inventory {}
+Actor SC_SelectedOffsetY : Inventory {}
+
+Actor SC_IsDragging : Inventory { Inventory.MaxAmount 1 }
+Actor SC_DraggedSector : Inventory {}
+Actor SC_DraggedLine : Inventory { Inventory.MaxAmount 5 }
+Actor SC_IsDraggingCeiling : Inventory { Inventory.MaxAmount 1 }
+
+Actor SC_DragStartX : Inventory {}
+Actor SC_DragStartY : Inventory {}
+Actor SC_DragStartZ : Inventory {}
+
+Actor SC_DragStartOffsetX : Inventory {}
+Actor SC_DragStartOffsetY : Inventory {}
+
+Actor SC_AlignTool : Weapon
+{
+	+UNDROPPABLE
+	+WEAPON.NOALERT
+	+WEAPON.NOAUTOAIM
+
+	States
+	{
+	Spawn:
+		CSAW A -1
+		Stop
+	Ready:
+		SAWG C 1 A_WeaponReady
+		NULL A 0 A_JumpIfInventory("SC_CopyButton", 1, "Copy")
+		Loop
+	Select:
+		SAWG C 1 A_Raise
+		Loop
+	Deselect:
+		SAWG C 1 A_Lower
+		Loop
+
+	Fire:
+		SAWG A 5 A_FireCustomMissile("SC_SetAlignment")
+		Goto Ready
+	AltFire:
+		SAWG A 3 A_FireCustomMissile("SC_DragTexture")
+		NULL A 0 A_ReFire
+		NULL A 0 A_TakeInventory("SC_IsDragging", 1) // We stopped dragging if we stopped refiring.
+		goto Ready
+	Copy:
+		NULL A 0 A_TakeInventory("SC_CopyButton", 1)
+		SAWG A 5 A_FireCustomMissile("SC_ReadAlignment")
+		goto Ready
+	}
+}

@@ -1,0 +1,292 @@
+function int GetFloorHeight(int s)
+{
+	return GetSectorFloorZ(s, 0, 0)>>16;
+}
+function int GetCeilingHeight(int s)
+{
+	return GetSectorCeilingZ(s, 0, 0)>>16;
+}
+
+function int SetFloorHeight(int s, int height)
+{
+	if (!CheckLock(s))
+		return VALUE_UNCHANGED;
+
+	int fheight = GetFloorHeight(s);
+	int cheight = GetCeilingHeight(s);
+	int minheight = GetCVar("sc_minheight");
+
+	if (height > cheight)
+		height = cheight;
+	else if (height < minheight)
+		height = minheight;
+
+	if (height == fheight)
+		return VALUE_UNCHANGED;
+
+	Floor_MoveToValue(s, 65535, height, false);
+	return height;
+}
+
+function int SetCeilingHeight(int s, int height)
+{
+	if (!CheckLock(s))
+		return VALUE_UNCHANGED;
+
+	int fheight = GetFloorHeight(s);
+	int cheight = GetCeilingHeight(s);
+	int maxheight = GetCVar("sc_maxheight");
+
+	if (height < fheight)
+		height = fheight;
+	if (height > maxheight)
+		height = maxheight;
+
+	if (height == cheight)
+		return VALUE_UNCHANGED;
+
+	Ceiling_MoveToValue(s, 65535, height, false);
+	return height;
+}
+function int SetHeight(int s, int flat, int height)
+{
+	if (flat == FLOOR)
+		return SetFloorHeight(s, height);
+	return SetCeilingHeight(s, height);
+}
+
+// Set both heights in order that does not cause conflicts.
+// Stupid ACS doesn't allow delays in functions.
+function void SetHeights(int s, int floorh, int ceilh)
+{
+	int oldfloorh = GetFloorHeight(s);
+	int oldceilh = GetCeilingHeight(s);
+
+	if (floorh > oldceilh)
+	{
+		SetCeilingHeight(s, ceilh);
+		ACS_ExecuteWithResult(301, s, floorh);
+	}
+	else if (ceilh < oldfloorh)
+	{
+		SetFloorHeight(s, floorh);
+		ACS_ExecuteWithResult(302, s, ceilh);
+	}
+	else
+	{
+		SetFloorHeight(s, floorh);
+		SetCeilingHeight(s, ceilh);
+	}
+}
+script 301 (int s, int floorh)
+{
+	Delay(1);
+	SetFloorHeight(s, floorh);
+}
+script 302 (int s, int ceilh)
+{
+	Delay(1);
+	SetCeilingHeight(s, ceilh);
+}
+/*
+function void SetHeights(int s, int floorh, int ceilh)
+{
+	if (ceildiff > 0 && floordiff > 0)
+	{
+		// Move ceiling first.
+		SetCeilingHeight(s, newceil);
+		ACS_ExecuteWithResult(301, s, newfloor)
+		
+	}
+	else if (floordiff < 0 && ceildiff < 0)
+	{
+		// Move floor first.
+		SetFloorHeight(s, newfloor);
+		ACS_ExecuteWithResult(302, s, newceil);
+	}
+	else
+	{
+		// Either order doesn't matter
+		// or such height combination is impossible, so let the bugs be there.
+		SetFloorHeight(s, newfloor);
+		SetCeilingHeight(s, newceil);
+	}
+}
+script 301 (int s, int floorh)
+{
+	Delay(1);
+	SetFloorHeight(s, newfloor);
+}
+script 302 (int s, int ceilh)
+{
+	Delay(1);
+	SetCeilingHeight(s, newceil);
+}
+*/
+
+
+// push/pull floor or ceiling.
+script 10 (int diff)
+{
+	SetCursorActor(0);
+	if (!Target())
+		terminate;
+	SetActivatorToTarget(0);
+
+	int s;
+	int isfloor;
+	int height, newheight;
+	str action;
+
+	s = SelectFloor();
+	if (s)
+	{
+		height = GetFloorHeight(s);
+		if (diff > 0)
+			action = "lowered";
+		else
+			action = "raised";
+
+		height -= diff;
+
+		newheight = SetFloorHeight(s, height);
+		if (newheight != VALUE_UNCHANGED)
+			NotifyAction(StrParam(s:"Floor ", s:action, s:" to ", d:newheight, s:"."));
+		terminate;
+	}
+
+	s = SelectCeiling();
+	if (s)
+	{
+		height = GetCeilingHeight(s);
+		if (diff > 0)
+			action = "raised";
+		else
+			action = "lowered";
+
+		height += diff;
+
+		newheight = SetCeilingHeight(s, height);
+		if (newheight != VALUE_UNCHANGED)
+			NotifyAction(StrParam(s:"Ceiling ", s:action, s:" to ", d:newheight, s:"."));
+	}
+}
+
+// Copy height
+script 11 (void)
+{
+	SetCursorActor(0);
+	if (!Target())
+		terminate;
+	SetActivatorToTarget(0);
+
+	int height;
+
+	int s = SelectFloor();
+	if (s)
+	{
+		height = GetFloorHeight(s);
+		SaveSigned("SC_SelectedFloorHeight", height);
+		NotifyCopy(StrParam(s:"Copied floor height \cf", d:height, s:"\c-."));	
+		terminate;
+	}
+
+	s = SelectCeiling();
+	if (s)
+	{
+		height = GetCeilingHeight(s);
+		SaveSigned("SC_SelectedCeilingHeight", height);
+		NotifyCopy(StrParam(s:"Copied ceiling height \cf", d:height, s:"\c-."));	
+		terminate;
+	}
+}
+
+// Paste height.
+script 12 (void)
+{
+	SetCursorActor(0);
+	if (!Target())
+		terminate;
+	SetActivatorToTarget(0);
+
+	int newheight;
+	int s = SelectFloor();
+	if (s)
+	{
+		newheight = SetFloorHeight(s, ReadSigned("SC_SelectedFloorHeight"));
+		if (newheight != VALUE_UNCHANGED)
+			NotifyAction(StrParam(s:"Floor height level set to ", d:newheight));
+		terminate;
+	}
+	s = SelectCeiling();
+	if (s)
+	{
+		newheight = SetCeilingHeight(s, ReadSigned("SC_SelectedCeilingHeight"));
+		if (newheight != VALUE_UNCHANGED)
+			NotifyAction(StrParam(s:"Ceiling height level set to ", d:newheight));
+		terminate;
+	}
+}
+
+
+// Copy height.
+/*
+script 11 (void)
+{
+	SetCursorActor(0);
+	if (!Target())
+		terminate;
+	SetActivatorToTarget(0);
+
+	int s = SelectFloor();
+	int height;
+	if (s)
+	{
+		height = GetFloorHeight(s);
+		Copy("SC_SelectedHeightIsCeiling", 0);
+		Copy("SC_SelectedHeight", height);
+		NotifyCopy(StrParam(s:"Copied floor height \cf", d:height, s:"\c-."));	
+		terminate;
+	}
+
+	s = SelectCeiling();
+	if (s)
+	{
+		height = GetCeilingHeight(s);
+		Copy("SC_SelectedHeightIsCeiling", 1);
+		Copy("SC_SelectedHeight", height);
+		NotifyCopy(StrParam(s:"Copied ceiling height \cf", d:height, s:"\c-."));	
+		terminate;
+	}
+}
+
+// Paste height.
+script 12 (void)
+{
+	SetCursorActor(0);
+	if (!Target())
+		terminate;
+	SetActivatorToTarget(0);
+
+	int s = SelectFloor();
+	if (!s)
+		s = SelectCeiling();
+
+	str what;
+	int newheight;
+
+	if (CheckInventory("SC_SelectedHeightIsCeiling"))
+	{
+		what = "Ceiling";
+		newheight = SetCeilingHeight(s, CheckInventory("SC_SelectedHeight"));
+	}
+	else
+	{
+		what = "Floor";
+		newheight = SetFloorHeight(s, CheckInventory("SC_SelectedHeight"));
+	}
+
+	if (newheight != VALUE_UNCHANGED)
+		NotifyAction(StrParam(s:what, s:" height level set to ", d:newheight));
+}
+*/

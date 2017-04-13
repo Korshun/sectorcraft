@@ -1,0 +1,124 @@
+function int SetTexture(int s, int l, int flat, int texture)
+{
+	if (!CheckLock(s))
+		return VALUE_UNCHANGED;
+
+	if (WorldTextures[s][l][flat] == texture)
+		return VALUE_UNCHANGED;
+
+	if (l == LINE_NONE)
+	{
+		if (flat == FLOOR)
+			ChangeFloor(s, Textures[texture]);
+		else
+			ChangeCeiling(s, Textures[texture]);
+	}
+	else
+	{
+		if (flat == FLOOR)
+			SetLineTexture(GetTileLine(s, l), GetLineSide(l), TEXTURE_BOTTOM, ReplaceWallTexture(Textures[texture]));
+		else
+			SetLineTexture(GetTileLine(s, l), GetLineSide(l), TEXTURE_TOP, ReplaceWallTexture(Textures[texture]));
+	}
+
+	WorldTextures[s][l][flat] = texture;
+	return texture;
+}
+
+function int SetLowerTexture(int s, int l, int texture) { return SetTexture(s, l, FLOOR, texture); }
+function int SetUpperTexture(int s, int l, int texture) { return SetTexture(s, l, CEILING, texture); }
+function int SetFloorTexture(int s, int texture) { return SetTexture(s, 0, FLOOR, texture); }
+function int SetCeilingTexture(int s, int texture) { return SetTexture(s, 0, CEILING, texture); }
+
+function str ReplaceWallTexture(str flat)
+{
+	switch (flat)
+	{
+	case "F_SKY1": return "-";
+
+	case "FWATER1": return "WFALL1";
+	case "LAVA1": return "LAVFALL1";
+	case "BLOOD1": return "BFALL1";
+	case "NUKAGE1": return "SFALL1";
+
+	case "bwater1": return "BBFALL1";
+	case "blblood1": return "BBFALL1";
+	}
+
+	return flat;
+}
+
+
+// Set texture.
+script 30 (void)
+{
+	SetCursorActor(0);
+	if (!Target())
+		terminate;
+	SetActivatorToTarget(0);
+
+	int fine = CheckInventory("SC_TexturingMode");
+	int texture = CheckInventory("SC_SelectedTexture");
+	
+
+	int s = Select();
+	if (fine)
+		SetTexture(s, SelectedLine, SelectedFlat, texture);
+	else
+	{
+		SetTexture(s, 0, SelectedFlat, texture);
+		SetTexture(s, 1, SelectedFlat, texture);
+		SetTexture(s, 2, SelectedFlat, texture);
+		SetTexture(s, 3, SelectedFlat, texture);
+		SetTexture(s, 4, SelectedFlat, texture);
+	}
+
+	str what;
+	if (SelectedLine == LINE_NONE || fine)
+	{
+		if (SelectedFlat == FLOOR)
+			what = "floor";
+		else
+			what = "ceiling";
+	}
+	else
+	{
+		if (SelectedFlat == FLOOR)
+			what = "lower";
+		else
+			what = "upper";
+	}
+	NotifyAction(StrParam(s:"Changed ", s:what, s:" texture to \"", s:Textures[texture], s:"\"."));
+}
+
+// Select texture from a surface.
+script 31 (void)
+{
+	SetCursorActor(0);
+	if (!Target())
+		terminate;
+	SetActivatorToTarget(0);
+
+	int s = Select();
+	int texture = WorldTextures[s][SelectedLine][SelectedFlat];
+	Save("SC_SelectedTexture", texture);
+	GiveInventory("SC_SelectedTextureCopied", 1); // Notify texture picker about copied texture.
+
+	NotifyMode(StrParam(s:"Selected texture \"", s:Textures[texture], s:"\"."));
+}
+
+// Toggle broad texturing mode.
+script 32 (void)
+{
+	int fine = CheckInventory("SC_TexturingMode");
+	if (fine)
+	{
+		TakeInventory("SC_TexturingMode", 1);
+		NotifyMode("Broad texturing mode.");
+	}
+	else
+	{
+		GiveInventory("SC_TexturingMode", 1);
+		NotifyMode("Fine texturing mode.");
+	}
+}

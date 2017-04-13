@@ -1,0 +1,9 @@
+// Checks whenther a player may edit this sector.
+function bool CheckPermission(int s)
+{
+	return true;
+}
+function bool CheckLock(int s)
+{
+	return CheckPermission(s);
+}

@@ -1,0 +1,116 @@
+#define BASE_FLOORACTOR 2000
+
+function int GetFloorActor(int s)
+{
+	int tag = BASE_FLOORACTOR + s;
+
+	if (ThingCountSector(T_NONE, tag, s) == 0) // If the actor is not inside its home sector, assume there is no actor.
+		return 0;
+	return WorldFloorActors[s];
+}
+
+function int SetFloorActor(int s, int actor, int angle)
+{
+	int oldactor = WorldFloorActors[s];
+	int tag = BASE_FLOORACTOR + s;
+
+	if (actor == GetFloorActor(s))
+		return VALUE_UNCHANGED;
+
+	if (actor == TIMEFREEZESPHERE_INDEX && GetCVar("sc_disabletimefreeze"))
+	{
+		NotifyError("Time freeze spheres are disabled on this server.");
+		return VALUE_UNCHANGED;
+	}
+	if (actor == RANDOMSPHERE_INDEX && GetCvar("sc_disablerandomsphere"))
+	{
+		NotifyError("Randomspheres are disabled on this server.");
+		return VALUE_UNCHANGED;
+	}
+	int barrellimit = GetCVar("sc_barrellimit");
+	if (actor == BARREL_INDEX && barrellimit && ThingCountName("ExplosiveBarrel", 0) >= barrellimit)
+	{
+		NotifyError(StrParam(s:"Only ", d:barrellimit, s:" barrels are allowed on this server."));
+		return VALUE_UNCHANGED;
+	}
+	
+	if (ActorIsMonster(actor))
+	{
+		int mtotal = GetLevelInfo(LEVELINFO_TOTAL_MONSTERS);
+        int mkilled = GetLevelInfo(LEVELINFO_KILLED_MONSTERS);
+		int mlimit = GetCVar("sc_monsterlimit");
+
+		// Prevent monster spam that lags the server.
+		
+		if (mlimit <= 0)
+		{
+			NotifyError("Monsters are disabled on this server");
+			return VALUE_UNCHANGED;
+		}
+
+		if (mtotal - mkilled >= mlimit)
+		{
+			NotifyError(StrParam(s:"Only ", d:mlimit, s:" monsters are allowed on this server."));
+			return VALUE_UNCHANGED;
+		}
+	}
+
+	// Remove existing actor if it is still inside its home tile.
+	if (GetFloorActor(s))
+		Thing_Remove(tag);
+
+	WorldFloorActors[s] = actor;
+
+	if (actor != 0)
+	{
+		int x = (TileX(s) * TileWidth  + TileWidth  / 2)<<16;
+		int y = (TileY(s) * TileHeight + TileHeight / 2)<<16;
+		int z = GetSectorFloorZ(s, 0, 0);
+		Spawn(Actors[actor][ACTOR_CLASSNAME], x, y, z, tag, angle);
+		Spawn("SC_TeleFog", x, y, z, 0, angle);
+	}
+	return actor;
+}
+
+
+// Spawn an actor.
+script 50 (int delete)
+{
+	SetCursorActor(0);
+	if (!Target())
+		terminate;
+	SetActivatorToTarget(0);
+
+	int actor;
+	if (delete)
+		actor = 0;
+	else
+		actor = CheckInventory("SC_SelectedActor");
+
+	int s = SelectTop();
+	if (SetFloorActor(s, actor, (CursorAngle>>8) + 128) != VALUE_UNCHANGED)
+	{
+		if (actor == 0)
+			NotifyAction("Actor deleted");
+		else
+			NotifyAction(StrParam(s:"Spawned \"", s:Actors[actor][ACTOR_DISPLAYNAME], s:"\"." ));
+	}
+}
+
+// Read actor.
+script 51 (void)
+{
+	SetCursorActor(0);
+	if (!Target())
+		terminate;
+	SetActivatorToTarget(0);
+
+	int actor = GetFloorActor(SelectTop());
+	if (actor != 0)
+	{
+		TakeInventory("SC_SelectedActor", 9999);
+		GiveInventory("SC_SelectedActor", actor);
+		GiveInventory("SC_SelectedActorCopied", 1); // Notify actor picker about copied actor.
+		NotifyMode(StrParam(s:"Selected actor \"", s:Actors[actor][ACTOR_DISPLAYNAME], s:"\"." ));
+	}
+}

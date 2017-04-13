@@ -1,0 +1,237 @@
+function void SetTextureOffset(int s, int line, int flat, int x, int y)
+{
+	if (!CheckPermission(s))
+		return;	
+
+	if (line == 0)
+	{
+		if (flat == FLOOR)
+			Sector_SetFloorPanning(s, x, 0, y, 0);
+		else
+			Sector_SetCeilingPanning(s, x, 0, y, 0);
+
+	}
+	else
+	{
+		// Sectorcraft texture offsets are relative to original map texture offsets.
+		int flags = TEXFLAG_ADDOFFSET;
+		if (flat == FLOOR)
+			flags |= TEXFLAG_BOTTOM;
+		else
+			flags |= TEXFLAG_TOP;
+
+		int oldx = WorldTextureOffsets[s][line][flat][OFFSET_X];
+		int oldy = WorldTextureOffsets[s][line][flat][OFFSET_Y];
+		Line_SetTextureOffset(GetTileLine(s, line), (x-oldx)<<16, (y-oldy)<<16, GetLineSide(line), flags);
+	}
+
+	WorldTextureOffsets[s][line][flat][OFFSET_X] = x;
+	WorldTextureOffsets[s][line][flat][OFFSET_Y] = y;
+}
+
+// ==========================
+// TOOL
+// ==========================
+
+// Set selected texture offset.
+script 80 (void)
+{
+	SetCursorActor(0);
+	if (!Target())
+		terminate;
+	SetActivatorToTarget(0);
+
+	int x = ReadSigned("SC_SelectedOffsetX");
+	int y = ReadSigned("SC_SelectedOffsetY");
+
+	int s = Select();
+	if (!s)
+		terminate;
+	if (SelectedLine != 0 && GameType() != GAME_SINGLE_PLAYER)
+		terminate;
+	SetTextureOffset(s, SelectedLine, SelectedFlat, x, y);
+
+	str what;
+	if (SelectedLine == LINE_NONE)
+	{
+		if (SelectedFlat == FLOOR)
+			what = "Floor";
+		else
+			what = "Ceiling";
+	}
+	else 
+	{
+		if (SelectedFlat == FLOOR)
+			what = "Upper";
+		else
+			what = "Lower";
+	}
+
+	NotifyAction(StrParam(s:what, s:" texture offset set to \cg(", d:x, s:"; ", d:y, s:")\c-."));
+}
+
+// Update the dragged
+function void UpdateDrag(void)
+{
+	// Rotate to the needed plane.
+	int s = Read("SC_DraggedSector");
+	int l = Read("SC_DraggedLine");
+	int isceiling = Read("SC_IsDraggingCeiling");
+
+	// U prefix means Untransformed.
+	int UstartX = ReadSigned("SC_DragStartX");
+	int UstartY = ReadSigned("SC_DragStartY");
+	int UstartZ = ReadSigned("SC_DragStartZ");
+
+	int UcX = CursorX>>16;
+	int UcY = CursorY>>16;
+	int UcZ = CursorZ>>16;
+
+	// Transform coordinates.
+	int startX, startY, startZ;
+	int cX, cY, cZ;
+	switch (l)
+	{
+	// XY plane.
+	case LINE_NONE: 
+		startX = UstartX;
+		startY = UstartY;
+		startZ = UstartZ;
+
+		cX = UcX;
+		cY = UcY;
+		cZ = UcZ;
+		break;
+
+	// XZ plane.
+	case LINE_BOTTOM:
+	case LINE_TOP:
+		startX = UstartX;
+		startY = UstartZ;
+		startZ = UstartY;
+		
+		cX = UcX;
+		cY = UcZ;
+		cZ = UcY;
+		break;
+
+	// YZ plane.
+	case LINE_LEFT:
+	case LINE_RIGHT:
+		startX = UstartY;
+		startY = UstartZ;
+		startZ = UstartX;
+		
+		cX = UcY;
+		cY = UcZ;
+		cZ = UcX;
+		break;
+	}
+
+	int dX = cX - startX;
+	int dY = cY - startY;
+	int dZ = cZ - startZ;
+
+	// We are dragging a different plane, stop.
+	if (dZ != 0)
+	{
+		Save("SC_IsDragging", 0);
+		return;
+	}
+
+	if (l != LINE_NONE /*&& GameType() != GAME_SINGLE_PLAYER*/) 
+	{
+		Save("SC_IsDragging", 0);
+		return;
+	}
+
+	// Some planes need to invert X difference.
+	if (l == LINE_NONE || l == LINE_BOTTOM || l == LINE_RIGHT)
+		dX = -dX;
+
+	// Movement step is 4.
+	int x = ReadSigned("SC_DragStartOffsetX") + dX / 4 * 4; 
+	int y = ReadSigned("SC_DragStartOffsetY") + dY / 4 * 4;
+	
+	// Drag and remember the offset.
+	SetTextureOffset(s, l, isceiling, x, y);
+	SaveSigned("SC_SelectedOffsetX", x);
+	SaveSigned("SC_SelectedOffsetY", y);
+
+	str what;
+	if (!isceiling)
+	{
+		if (l == LINE_NONE)
+			what = "Floor";
+		else 
+			what = "Lower";
+	}
+	else 
+	{
+		if (l == LINE_NONE)
+			what = "Ceiling";
+		else
+			what = "Upper";
+	}
+
+	NotifyAction(StrParam(s:what, s:" texture offset set to \cg(", d:x, s:"; ", d:y, s:")\c-."));
+}
+
+// Drag a texture.
+script 81 (void) 
+{
+	SetCursorActor(0);
+	if (!Target())
+		terminate;
+	SetActivatorToTarget(0);
+
+	if (!Read("SC_IsDragging")) // Begin dragging.
+	{
+		int s = Select();
+		if (!s)
+			terminate;
+
+		Save("SC_IsDragging", 1);
+		Save("SC_DraggedSector", s);
+		Save("SC_DraggedLine", SelectedLine);
+		Save("SC_IsDraggingCeiling", SelectedFlat);
+
+		SaveSigned("SC_DragStartX", CursorX>>16);
+		SaveSigned("SC_DragStartY", CursorY>>16);
+		SaveSigned("SC_DragStartZ", CursorZ>>16);
+
+		int x = WorldTextureOffsets[s][SelectedLine][SelectedFlat][OFFSET_X];
+		int y = WorldTextureOffsets[s][SelectedLine][SelectedFlat][OFFSET_Y];
+		SaveSigned("SC_DragStartOffsetX", x);
+		SaveSigned("SC_DragStartOffsetY", y);
+	}
+	else
+		UpdateDrag();
+}
+
+// Stop dragging.
+script 83 (void)
+{
+	Save("SC_IsDragging", 0);
+}
+
+// Copy texture offset.
+script 82 (void) 
+{
+	SetCursorActor(0);
+	if (!Target())
+		terminate;
+	SetActivatorToTarget(0);
+
+	int s = Select();
+	if (!s)
+		terminate;
+
+	int x = WorldTextureOffsets[s][SelectedLine][SelectedFlat][OFFSET_X];
+	int y = WorldTextureOffsets[s][SelectedLine][SelectedFlat][OFFSET_Y];
+
+	SaveSigned("SC_SelectedOffsetX", x);
+	SaveSigned("SC_SelectedOffsetY", y);
+
+	NotifyMode(StrParam(s:"Selected texture offset \cg(", d:x, s:"; ", d:y, s:")\c-."));
+}

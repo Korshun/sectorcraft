@@ -1,0 +1,121 @@
+// Make player bodies disappear like monster bodies.
+Actor SC_Doomer : DoomPlayer replaces DoomPlayer
+{
+	Player.DisplayName "Doomer"
+	DamageFactor "DeleteActor", 0
+
+	Player.StartItem "SCA_Clip", 50
+	Player.StartItem "SCA_Pistol" // Not ordinary pistol but replaced pistol!
+	Player.StartItem "Fist"
+
+	States
+	{
+	Death:
+		PLAY H 0 A_PlayerSkinCheck("AltSkinDeath")
+		PLAY H 10
+		PLAY I 10 A_PlayerScream
+		PLAY J 10 A_NoBlocking
+		PLAY KLM 10
+		PLAY NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN 35
+		PLAY NNNNNNNNNNNNNNNNNNNN 5 A_FadeOut(0.05)
+		Stop
+	XDeath:
+		PLAY O 0 A_PlayerSkinCheck("AltSkinXDeath")
+		PLAY O 5
+		PLAY P 5 A_XScream
+		PLAY Q 5 A_NoBlocking
+		PLAY RSTUV 5
+		PLAY WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW 35
+		PLAY WWWWWWWWWWWWWWWWWWWW 5 A_FadeOut(0.05)
+		Stop
+	AltSkinDeath:
+		PLAY H 6
+		PLAY I 6 A_PlayerScream
+		PLAY JK 6
+		PLAY L 6 A_NoBlocking
+		PLAY MNO 6
+		PLAY PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP 35
+		PLAY PPPPPPPPPPPPPPPPPPPP 5 A_FadeOut(0.05)
+		Stop
+	AltSkinXDeath:
+		PLAY Q 5 A_PlayerScream
+		PLAY R 0 A_NoBlocking
+		PLAY R 5 A_SkullPop
+		PLAY STUVWX 5
+		PLAY YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY 35
+		PLAY YYYYYYYYYYYYYYYYYYYY 5 A_FadeOut(0.05)
+		Stop
+	}
+}
+
+// New player class with all the tools.
+Actor SectorCrafter : DoomPlayer
+{
+	Player.DisplayName "SectorCrafter"
+	DamageFactor "DeleteActor", 0
+
+	-PICKUP
+	+NODAMAGE
+
+	// These flags don't work alone, spawn script sets PROP_NOTARGET too.
+	+NOTARGET
+	-FRIENDLY
+
+
+	// Weapon slots.
+	Player.WeaponSlot 2, "SC_HeightTool"
+	Player.WeaponSlot 3, "SC_FadeTool", "SC_ColorTool", "SC_LightTool"
+	Player.WeaponSlot 4, "SC_AlignTool", "SC_TextureTool"
+	Player.WeaponSlot 5, "SC_PasteTool"
+	Player.WeaponSlot 6, "SC_ActorTool"
+	//Player.WeaponSlot 7, "SC_LockTool"
+
+	// New tools!
+	Player.StartItem "SC_HeightTool"
+	Player.StartItem "SC_LightTool"
+	Player.StartItem "SC_ColorTool"
+	Player.StartItem "SC_FadeTool"
+	Player.StartItem "SC_TextureTool"
+	Player.StartItem "SC_AlignTool"
+	Player.StartItem "SC_PasteTool"
+	Player.StartItem "SC_ActorTool"
+
+	States
+	{
+	Death:
+		PLAY H 0 A_PlayerSkinCheck("AltSkinDeath")
+		PLAY H 10
+		PLAY I 10 A_PlayerScream
+		PLAY J 10 A_NoBlocking
+		PLAY KLM 10
+		PLAY NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN 35
+		PLAY NNNNNNNNNNNNNNNNNNNN 5 A_FadeOut(0.05)
+		Stop
+	XDeath:
+		PLAY O 0 A_PlayerSkinCheck("AltSkinXDeath")
+		PLAY O 5
+		PLAY P 5 A_XScream
+		PLAY Q 5 A_NoBlocking
+		PLAY RSTUV 5
+		PLAY WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW 35
+		PLAY WWWWWWWWWWWWWWWWWWWW 5 A_FadeOut(0.05)
+		Stop
+	AltSkinDeath:
+		PLAY H 6
+		PLAY I 6 A_PlayerScream
+		PLAY JK 6
+		PLAY L 6 A_NoBlocking
+		PLAY MNO 6
+		PLAY PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP 35
+		PLAY PPPPPPPPPPPPPPPPPPPP 5 A_FadeOut(0.05)
+		Stop
+	AltSkinXDeath:
+		PLAY Q 5 A_PlayerScream
+		PLAY R 0 A_NoBlocking
+		PLAY R 5 A_SkullPop
+		PLAY STUVWX 5
+		PLAY YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY 35
+		PLAY YYYYYYYYYYYYYYYYYYYY 5 A_FadeOut(0.05)
+		Stop
+	}
+}

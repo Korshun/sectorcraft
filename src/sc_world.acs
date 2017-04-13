@@ -1,0 +1,120 @@
+//===========================
+// WORLD
+//===========================
+
+// World configuration.
+int TileWidth = 32, TileHeight = 32;
+int MapWidth = 64, MapHeight = 64;
+int HeightStep = 8;
+
+// LINE_NONE means sector itself.
+#define LINE_NONE 0
+#define LINE_LEFT 1
+#define LINE_TOP 2
+#define LINE_RIGHT 3
+#define LINE_BOTTOM 4
+
+// Coloring.
+#define NUM_COLOR_COMPONENTS 3
+#define COLOR_RED 0
+#define COLOR_GREEN 1
+#define COLOR_BLUE 2
+
+// Offsets.
+#define OFFSET_X 0
+#define OFFSET_Y 1
+
+// Sector property arrays for properties that can't be
+// quickly retrieved with ACS functions. 16385 is 128x128 sectors + indexing starts from 1.
+// Maps less than 128x128 don't use the whole array.
+int WorldFloorActors[16385];
+int WorldLightColors[16385][NUM_COLOR_COMPONENTS];
+int WorldFadeColors[16385][NUM_COLOR_COMPONENTS];
+
+#define FLOOR 0
+#define CEILING 1
+
+int WorldTextures[16385][5][2];
+int WorldTextureOffsets[16385][5][2][2];
+
+// Initializes a CVar.
+function void InitCVar(str name, int def)
+{
+	if (GetCVar(name) == 0)
+		SetCVar(name, def);
+}
+
+// Set default cvar values.
+function void InitCVars(void)
+{
+	if (GameType() == GAME_SINGLE_PLAYER)
+		InitCVar("sc_monsterlimit", 99999);
+	else
+		InitCVar("sc_monsterlimit", 30);
+	InitCVar("sc_barrellimit", 99999);
+
+	InitCVar("sc_minheight", -1024);
+	InitCVar("sc_maxheight", 1024);
+	
+	InitCVar("sc_disabletimefreeze", 1);
+	InitCVar("sc_disablerandomsphere", 0);
+	InitCVar("sc_disablesectorcrafters", 0);
+	InitCVar("sc_disabledoomers", 0);
+	
+	InitCVar("sc_loadspeed", 1);
+	InitCVar("sc_savespeed", 1);
+	
+	ConsoleCommand("archivecvar sc_loadspeed");
+	ConsoleCommand("archivecvar sc_savespeed");
+	
+	ConsoleCommand("set compat_dont_stop_player_scripts_on_disconnect 1");
+}
+
+int bugmap;
+
+// SectorCraft init script.
+script 100 OPEN
+{
+	InitCVars();
+
+	int number = GetLevelInfo(LEVELINFO_LEVELNUM);
+	switch (number)
+	{
+	case 101: // SectorCraft Small.
+		MapWidth = 64;
+		MapHeight = 64;
+		break;
+	case 102: // SectorCraft Medium.
+		MapWidth = 96;
+		MapHeight = 96;
+		break;
+	case 103: // SectorCraft Big.
+		MapWidth = 128;
+		MapHeight = 128;
+		break;
+
+	default: // Not a sectorcraft map.
+		bugmap = true;
+		MapWidth = 96;
+		MapHeight = 96;
+	}
+
+	for (int i = 1; i <= MapWidth * MapHeight; i++)
+	{
+		for (int j = 0; j < 5; j++)
+		{
+			// Default textures.
+			WorldTextures[i][j][FLOOR] = GRASS1_INDEX;
+			WorldTextures[i][j][CEILING] = F_SKY1_INDEX;
+		}
+		
+		// By default, all sectors have white color.
+		WorldLightColors[i][COLOR_RED] = 255;
+		WorldLightColors[i][COLOR_GREEN] = 255;
+		WorldLightColors[i][COLOR_BLUE] = 255;
+
+		// Prevent runaway.
+		if (i % 1000 == 0)
+			Delay(1);
+	}
+}

@@ -1,0 +1,170 @@
+// Scripts 1-9 are for buttons.
+// Scripts from #0 to #9 are for tool #. (for example height tool uses scripts 10-19)
+
+function void InitPlayer(void)
+{
+	// Player TID assigner you have seen 100 times already.
+	Thing_ChangeTID(0, 1000 + PlayerNumber());
+
+	SaveSigned("SC_SelectedFloorHeight", 0); // Ground height.
+	SaveSigned("SC_SelectedCeilingHeight", 256); // Sky height.
+	
+	GiveInventory("SC_SelectedLightLevel", 224); // Map's default light level.
+
+	// Default sector color.
+	GiveInventory("SC_SelectedColorR", 255);
+	GiveInventory("SC_SelectedColorG", 255);
+	GiveInventory("SC_SelectedColorB", 255);
+
+	// White fog color by default.
+	GiveInventory("SC_SelectedFadeR", 255);
+	GiveInventory("SC_SelectedFadeG", 255);
+	GiveInventory("SC_SelectedFadeB", 255);
+
+	SaveSigned("SC_SelectedOffsetX", 0);
+	SaveSigned("SC_SelectedOffsetY", 0);
+	
+	GiveInventory("SC_SelectedActor", 1); // Do not spawn "remove actor" by default but something else.
+
+	//if (GameType() == GAME_SINGLE_PLAYER)
+	//	GiveInventory("SC_LockTool", 1); // Just for lulz.
+
+	// IMPORTANT: notarget for sectorcrafters.
+	if (PlayerClass(PlayerNumber()) == 0)
+		SetPlayerProperty(0, true, PROP_NOTARGET);
+	else // Fix railgun for doomers.
+		GiveInventory("SCA_RailgunLoadedAmmo", 4);
+}
+
+script 255 ENTER
+{
+	InitPlayer();
+	
+	if (bugmap)
+		PrintBold(s:"\cgSectorCraft error: \cfunknown map\n\n\cdEnjoy the bugs ;)");	
+}
+script 254 RESPAWN
+{
+	InitPlayer();
+}
+
+
+//===========================
+// KEYBIND SCRIPTS
+//===========================
+
+// Handle keypresses.
+script 1 (void) NET
+{
+	GiveInventory("SC_CopyButton", 1);
+}
+script 2 (int newstate) NET
+{
+	if (newstate)
+		GiveInventory("SC_SpecialButton", 1);
+	else
+		TakeInventory("SC_SpecialButton", 1);
+}
+
+// Toggle "fly"
+script 3 (void) NET
+{
+	if (PlayerClass(PlayerNumber()) != 0)
+	{
+		NotifyCheat("You may not cheat if you are not a sectorcrafter.");
+		terminate; // Not a sectorcrafter, cheats disabled.
+	}
+
+	int flying = CheckInventory("SC_IsFlying");
+	if (!flying)
+	{
+		SetPlayerProperty(0, true, PROP_FLY);
+		GiveInventory("SC_IsFlying", 1);
+		NotifyCheat("You feel lighter");
+	}
+	else
+	{
+		SetPlayerProperty(0, false, PROP_FLY);
+		TakeInventory("SC_IsFlying", 1);
+		NotifyCheat("Gravity weights you down");
+	}
+}
+
+
+//===========================
+// UTILS
+//===========================
+
+
+function void Save(str invname, int value)
+{
+	TakeInventory(invname, 999999);
+	GiveInventory(invname, value);
+}
+function int Read(str invname)
+{
+	return CheckInventory(invname);
+}
+
+function void SaveSigned(str invname, int value)
+{
+	Save(invname, value + 100000);
+}
+
+function int ReadSigned(str invname)
+{
+	return Read(invname) - 100000;
+}
+
+
+//===========================
+// PLAYER CLASS CONTROL
+//===========================
+
+function void CheckPlayerClass(int player)
+{
+	if (GetCVar("sc_disablesectorcrafters") && PlayerClass(player) == 0)
+	{
+		ConsoleCommand
+		(
+			StrParam
+			(
+				s:"kickfromgame_idx ",
+				d:player,
+				s:" \"playing as sectorcrafter is not allowed on this server.\""
+			)
+		);
+	}
+	else if (GetCVar("sc_disabledoomers") && PlayerClass(player) == 1)
+	{
+		ConsoleCommand
+		(
+			StrParam
+			(
+				s:"kickfromgame_idx ",
+				d:player,
+				s:" \"playing as doomer is not allowed on this server.\""
+			)
+		);
+	}
+}
+
+script 4 ENTER
+{
+	CheckPlayerClass(PlayerNumber());
+}
+
+// Monitor cvar changes.
+script 5 OPEN
+{
+	int old1 = GetCVar("sc_disablesectorcrafters");
+	int old2 = GetCVar("sc_disabledoomers");
+
+	Delay(35);
+
+	if (old1 != GetCVar("sc_disablesectorcrafters") || old2 != GetCVar("sc_disabledoomers"))
+		for (int i = 0; i < MAX_PLAYERS; i++)
+			CheckPlayerClass(i);
+
+	restart;
+}

@@ -1,0 +1,63 @@
+//======================================
+// COLOR TOOL
+//======================================
+
+Actor SC_SetColor : SC_ToolProjectile
+{
+	states
+	{
+	Death:
+		PUFF A 3 Bright ACS_ExecuteAlways(60, 0)
+		Stop
+	}
+}
+
+Actor SC_CopyColor : SC_ToolProjectile
+{
+	states
+	{
+	Death:
+		PUFF A 3 Bright ACS_ExecuteAlways(61, 0)
+		Stop
+	}
+}
+
+Actor SC_SelectedColorR  : Inventory {}
+Actor SC_SelectedColorG  : Inventory {}
+Actor SC_SelectedColorB  : Inventory {}
+Actor SC_SelectedColorCopied : Inventory { Inventory.MaxAmount 0x7fffffff }
+
+Actor SC_ColorTool : Weapon
+{
+	+UNDROPPABLE
+	+WEAPON.NOALERT
+	+WEAPON.NOAUTOAIM
+
+	States
+	{
+	Spawn:
+		PIST A -1
+		Stop
+	Ready:
+		PISG A 1 A_WeaponReady
+		NULL A 0 A_JumpIfInventory("SC_CopyButton", 1, "Copy")
+		Loop
+	Select:
+		PISG A 1 A_Raise
+		Loop
+	Deselect:
+		PISG A 1 A_Lower
+		Loop
+
+	Fire:
+		PISG B 5 A_FireCustomMissile("SC_SetColor")
+		Goto Ready
+	AltFire:
+		PISG B 5 ACS_ExecuteAlways(15, 0, tid - 1000)
+		Goto Ready
+	Copy:
+		NULL A 0 A_TakeInventory("SC_CopyButton", 1)
+		PISG B 5 A_FireCustomMissile("SC_CopyColor")
+		Goto Ready
+	}
+}

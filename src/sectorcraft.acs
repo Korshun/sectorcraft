@@ -1,0 +1,47 @@
+#include "zcommon.acs"
+
+function int version2string(int version)
+{
+	return StrParam
+	(
+		d:version / 1000000,       s:".",
+		d:version   / 10000 % 100, s:".",
+		d:version     / 100 % 100
+	);
+}
+
+//===========================
+// SECTORCRAFT
+//===========================
+
+#define SC_VERSION 00080301
+#define MAX_PLAYERS 64
+#define VALUE_UNCHANGED -99999
+
+#include "sc_list_textures.acs"
+#include "sc_list_actors.acs"
+
+#include "sc_world.acs"
+#include "sc_indexing.acs"
+#include "sc_misc.acs"
+#include "sc_selectors.acs"
+#include "sc_notifications.acs"
+#include "sc_locking.acs"
+#include "sc_mapformat.acs"
+#include "sc_mapops.acs"
+#include "sc_utils.acs"
+
+#include "sc_tool_height.acs"
+#include "sc_tool_light.acs"
+#include "sc_tool_color.acs"
+#include "sc_tool_fade.acs"
+#include "sc_tool_texture.acs"
+#include "sc_tool_align.acs"
+#include "sc_tool_actor.acs"
+
+#include "sc_copypaste.acs"
+
+#include "sc_menu.acs"
+#include "sc_menu_texture.acs"
+#include "sc_menu_actor.acs"
+#include "sc_menu_colorfade.acs"

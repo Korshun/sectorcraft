@@ -1,0 +1,347 @@
+// ==========================
+// SELECTORS
+// ==========================
+
+// Coordinates of cursor used by all selectors.
+int CursorX, CursorY, CursorZ;
+int CursorAngle; // Fixed-point.
+
+int SelectedFlat; // Additional return value for Select().
+int SelectedLine = LINE_NONE; // Another return value for selectors. Holds LINE_* enum.
+
+// Sets cursor actor for all selectors.
+function void SetCursorActor(int tid)
+{
+	CursorX = GetActorX(tid);
+	CursorY = GetActorY(tid);
+	CursorZ = GetActorZ(tid);
+	CursorAngle = GetActorAngle(tid);
+}
+
+
+// Convert cursor coordinates to tile coordinates.
+function int TargetX(void)
+{
+	return (CursorX / TileWidth) >> 16;
+}
+function int TargetY(void)
+{
+	return (CursorY / TileHeight) >> 16;
+}
+
+// Converts activator coordinates to tile tag.
+// Returns 0 if there is no tile corresponding to given coordinates.
+function int Target(void)
+{
+	// Workaround for +SKYEXPLODE not working on horizons.
+	// When a projectile vanishes, it gets moved EXACTLY to (0; 0).
+	// So if the projectile is there, it has vanished,
+	// and therefore its coordinates are invalid.
+	if (CursorX == 0.0 && CursorY == 0.0)
+		return 0;
+
+	return TileTag(TargetX(), TargetY());
+}
+
+
+// Utilities for flat selection.
+// Now supports solid actors as floors!
+function int TouchesFloor(int s)
+{
+	int fheight = GetSectorFloorZ(s, 0, 0);
+	int aheight = Actors[GetFloorActor(s)][ACTOR_HEIGHT]<<16;
+	if (CursorZ - fheight - aheight < 3.0)
+		return true;
+	return false;
+}
+function int TouchesCeiling(int s)
+{
+	if (GetSectorCeilingZ(s, 0, 0) - CursorZ < 3.0)
+		return true;
+	return false;
+}
+
+// Same as TouchesFloor/Ceiling but do not count walls.
+function int TouchesFloorActor(int s)
+{
+	int fheight = GetSectorFloorZ(s, 0, 0);
+	int aheight = Actors[GetFloorActor(s)][ACTOR_HEIGHT]<<16;
+	if (CursorZ - fheight - aheight < 3.0 && CursorZ > fheight)
+		return true;
+	return false;
+}
+
+
+// Selects a tile ONLY by floor.
+function int SelectFloorOnly(void)
+{
+	if (TouchesFloor(Target()))
+		return Target();
+	return 0;
+}
+
+// Selects a tile ONLY by ceiling.
+function int SelectCeilingOnly(void)
+{
+	if (TouchesCeiling(Target()))
+		return Target();
+	return 0;
+}
+
+// Selects a line.
+// Returns LINE_... identifiers (see the UTILITIES section)
+function int NearestLine1(void)
+{
+	int relx = CursorX % (TileWidth<<16);
+	int rely = CursorY % (TileHeight<<16);
+
+	if (rely < 3.0)
+		SelectedLine = LINE_BOTTOM;
+	else if (rely > (TileHeight<<16) - 3.0)
+		SelectedLine = LINE_TOP;
+	else if (relx < 3.0)
+		SelectedLine = LINE_LEFT;
+	else if (relx > (TileWidth<<16) - 3.0)
+		SelectedLine = LINE_RIGHT;
+	else
+		SelectedLine = LINE_NONE;
+
+	return SelectedLine;
+}
+
+// Selects a line using different prioroties compared to NearestLine1().
+function int NearestLine2(void)
+{
+	int relx = CursorX % (TileWidth<<16);
+	int rely = CursorY % (TileHeight<<16);
+
+	if (relx < 3.0)
+		SelectedLine = LINE_LEFT;
+	else if (relx > (TileWidth<<16) - 3.0)
+		SelectedLine = LINE_RIGHT;
+	else if (rely < 3.0)
+		SelectedLine = LINE_BOTTOM;
+	else if (rely > (TileHeight<<16) - 3.0)
+		SelectedLine = LINE_TOP;
+	else
+		SelectedLine = LINE_NONE;
+
+	return SelectedLine;
+}
+
+// Selects a tile by nearest line.
+function int SelectByLine1(int s)
+{
+	int l = NearestLine1();
+	switch (l)
+	{
+	case LINE_LEFT:   return LeftTile(s);
+	case LINE_RIGHT:  return RightTile(s);
+	case LINE_TOP:    return TopTile(s);
+	case LINE_BOTTOM: return BottomTile(s);
+	}
+
+	return 0;
+}
+
+// Selects a tile by nearest line using different priorities.
+function int SelectByLine2(int s)
+{
+	int l = NearestLine2();
+	switch (l)
+	{
+	case LINE_LEFT:   return LeftTile(s);
+	case LINE_RIGHT:  return RightTile(s);
+	case LINE_TOP:    return TopTile(s);
+	case LINE_BOTTOM: return BottomTile(s);
+	}
+
+	return 0;
+}
+
+// Selects a tile by nearest corner.
+function int SelectByCorner(int s)
+{
+	int relx = (CursorX>>16) % TileWidth;
+	int rely = (CursorY>>16) % TileHeight;
+	int sx = TileX(s);
+	int sy = TileY(s);
+
+	int tw3 = TileWidth - 3;
+	int th3 = TileHeight - 3;
+
+	// Lower left.
+	if (relx < 3 && rely < 3 && sx != 0 && sy != 0)
+	{
+		SelectedLine = LINE_BOTTOM;	
+		s = BottomTile(s);
+		if (s)
+			return LeftTile(s);
+	}
+	// Lower right.
+	else if (relx > tw3 && rely < 3 && sx != MapWidth - 1 && sy != 0)
+	{
+		SelectedLine = LINE_RIGHT;
+		s = BottomTile(s);
+		if (s)
+			return RightTile(s);
+	}
+	// Upper left.
+	else if (relx < 3 && rely > th3 && sx != 0 && sy != MapHeight - 1)
+	{
+		SelectedLine = LINE_LEFT;
+		s = TopTile(s);
+		if (s)
+			return LeftTile(s);
+	}
+	// Upper right.
+	else if (relx > tw3 && rely > th3 && sx != MapWidth - 1 && sy != MapHeight - 1)
+	{
+		SelectedLine = LINE_TOP;
+		s = TopTile(s);
+		if (s);
+			return RightTile(s);
+	}
+
+	SelectedLine = LINE_NONE;
+	return 0;
+}
+
+
+// Selects floor by floor or lower wall.
+function int SelectFloor(void)
+{
+	SelectedLine = LINE_NONE;
+	int s = SelectFloorOnly();
+	if (s)
+		return s;
+
+	s = SelectByLine1(Target());
+	if (s && TouchesFloor(s))
+	{
+		SelectedLine = OppositeLine(SelectedLine);
+		return s;
+	}
+
+	s = SelectByLine2(Target());
+	if (s && TouchesFloor(s))
+	{
+		SelectedLine = OppositeLine(SelectedLine);
+		return s;
+	}
+
+	s = SelectByCorner(Target());
+	if (s && TouchesFloor(s))
+	{
+		SelectedLine = OppositeLine(SelectedLine);
+		return s;
+	}
+
+	return 0;
+}
+
+// Selects ceiling by ceiling or upper wall.
+function int SelectCeiling(void)
+{
+	SelectedLine = LINE_NONE;
+	int s = SelectCeilingOnly();
+	if (s)
+		return s;
+
+	s = SelectByLine1(Target());
+	if (s && TouchesCeiling(s))
+	{
+		SelectedLine = OppositeLine(SelectedLine);
+		return s;
+	}
+
+	s = SelectByLine2(Target());
+	if (s && TouchesCeiling(s))
+	{
+		SelectedLine = OppositeLine(SelectedLine);
+		return s;
+	}
+
+	s = SelectByCorner(Target());
+	if (s && TouchesCeiling(s))
+	{
+		SelectedLine = OppositeLine(SelectedLine);
+		return s;
+	}
+
+	return 0;
+}
+
+// Select a floor but allow selecting by shooting a wall close enough.
+function int SelectTop(void)
+{
+	int s = SelectFloor();
+	if (s && CursorZ >= GetSectorFloorZ(s, 0, 0) - 16.0)
+		return s;
+	return Target();
+}
+
+
+// Selects both floors and ceilings.
+function int Select(void)
+{
+	int s = SelectFloor();
+	if (s)
+	{
+		SelectedFlat = FLOOR;
+		return s;
+	}
+
+	s = SelectCeiling();
+	if (s)
+	{
+		SelectedFlat = CEILING;
+		return s;
+	}
+
+	return 0;
+}
+
+/*
+function int SelectFloorActor(void)
+{
+	if (TouchesFloorActor(Target()))
+		return Target();
+
+	int s = SelectByLine1(Target());
+	if (s && TouchesFloorActor(s))
+		return s;
+
+	s = SelectByLine2(Target());
+	if (s && TouchesFloorActor(s))
+		return s;
+
+	s = SelectByCorner(Target());
+	if (s && TouchesFloorActor(s))
+		return s;
+
+	return 0;
+}
+*/
+
+/*
+function int SelectCeilingActor(void)
+{
+	if (TouchesCeilingActor(Target()))
+		return Target();
+
+	int s = SelectByLine1(Target());
+	if (s && TouchesCeilingActor(s))
+		return s;
+
+	s = SelectByLine2(Target());
+	if (s && TouchesCeilingActor(s))
+		return s;
+
+	s = SelectByCorner(Target());
+	if (s && TouchesCeilingActor(s))
+		return s;
+
+	return 0;
+}
+*/

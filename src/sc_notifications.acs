@@ -1,0 +1,89 @@
+//===========================
+// HUD DISPLAY
+//===========================
+// All non-gui hud displaying goes here.
+
+#define HID_GLOBAL 10
+#define HID_ACTION 11
+#define HID_CENTERMSG 12
+#define HID_CHEAT 13
+#define HID_MAPSAVE 14
+
+// HudMessage ID base for use in menus.
+#define HID_MENU 100
+
+// HudMessage ID base for use in menus in reverse order (needed for color menu).
+#define HID_RMENU 1000
+
+// Display cheating notification.
+function void NotifyCheat(str s)
+{
+	//SetFont("BIGFONT");
+	//HudMessage(s:s; HUDMSG_FADEOUT, HID_CHEAT, CR_GREEN, 0.5, 0.25, 1.0);
+	SetFont("SMALLFONT");
+	print(s:s);
+}
+
+// Display an ordinary action notification.
+function void NotifyAction(str s)
+{
+	SetFont("SMALLFONT");
+	HudMessage(s:s; HUDMSG_FADEOUT, HID_ACTION, CR_GOLD, 0.5, 0.9, 1.0);
+}
+
+// Same as above, but with BIGFONT.
+function void NotifyActionBig(str s)
+{
+	SetFont("BIGFONT");
+	HudMessage(s:s; HUDMSG_FADEOUT, HID_ACTION, CR_GOLD, 0.5, 0.9, 1.0);
+}
+
+// Display a mode change message.
+function void NotifyMode(str s)
+{
+	SetFont("BIGFONT");
+	HudMessage(s:s; HUDMSG_FADEOUT, HID_ACTION, CR_GREEN, 0.5, 0.9, 1.0);
+}
+
+// Display a paste action notification.
+function void NotifyPaste(str s)
+{
+	SetFont("BIGFONT");
+	HudMessage(s:s; HUDMSG_FADEOUT, HID_ACTION, CR_GREEN, 0.5, 0.9, 1.0);
+}
+
+// Display a copy action notification.
+function void NotifyCopy(str s)
+{
+	SetFont("BIGFONT");
+	HudMessage(s:s; HUDMSG_FADEOUT, HID_ACTION, CR_GREEN, 0.5, 0.9, 1.0);
+}
+
+// Display a paste buffer clear notification.
+function void NotifyClear(str s)
+{
+	SetFont("BIGFONT");
+	HudMessage(s:s; HUDMSG_FADEOUT, HID_CENTERMSG, CR_GREEN, 0.5, 0.5, 1.0);
+}
+
+// Notifiies about a locking operation.
+function void NotifyLock(str s)
+{
+	SetFont("BIGFONT");
+	HudMessage(s:s; HUDMSG_TYPEON, HID_GLOBAL, CR_GREEN, 0.5, 0.35, 1.0);
+}
+
+// Notifies about some error
+function void NotifyError(str s)
+{
+	SetFont("BIGFONT");
+	HudMessage(s:s; HUDMSG_FADEOUT, HID_CENTERMSG, CR_RED, 0.5, 0.5, 1.0);
+}
+
+// Notify everyone about a global change.
+function void NotifyGlobal(str s)
+{
+	// TODO: Display player name.
+	SetFont("BIGFONT");
+	HudMessageBold(s:s; HUDMSG_TYPEON, HID_GLOBAL, CR_YELLOW, 0.5, 0.35, 1.0);
+}

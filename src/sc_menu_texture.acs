@@ -1,0 +1,158 @@
+//===========================
+// TEXTURE MENU
+//===========================
+
+int PageWidth = 4;
+int PageHeight = 4;
+int ScreenWidth = 1280;
+int ScreenHeight = 1024;
+
+int NumTextures = NUM_TEXTURES; // Sorry, leftover from trying to add texturepacks.
+
+// Texture selection menu.
+script 35 (int player) NET CLIENTSIDE
+{
+	if (!BeginMenu(player))
+		terminate;
+
+	int copied = -1;
+	int index = -1;
+
+	// Input handling loop.
+	int oldindex = -1;
+	int buttons = 0;
+	int count = 0;
+	while (!(buttons & BT_USE) && !(buttons & BT_ATTACK))
+	{
+		// Update current index from inventory if the menu has just began
+		// or if Copy Button has just been pressed.
+		if (CheckInventory("SC_SelectedTextureCopied") != copied)
+		{
+			copied = CheckInventory("SC_SelectedTextureCopied");
+			index = CheckInventory("SC_SelectedTexture");
+		}
+
+		// Move cursor.
+		buttons = GetPlayerInput(-1, INPUT_BUTTONS);
+		if (!(count % 3)) // Poll input with lower frequency.
+		{
+			if (buttons & BT_LEFT || buttons & BT_MOVELEFT)
+				if (index > 0)
+					index--;
+			if (buttons & BT_RIGHT || buttons & BT_MOVERIGHT)
+				if (index < NumTextures - 1)
+					index++;
+			/*
+			if (buttons & BT_LEFT || buttons & BT_MOVELEFT)
+				if (index % 4 != 0)
+					index--;
+			if (buttons & BT_RIGHT || buttons & BT_MOVERIGHT)
+				if (index % 4 != 3)
+					index++;
+			*/
+			if (buttons & BT_FORWARD)
+				if (index - PageWidth >= 0)
+					index -= PageWidth;
+			if (buttons & BT_BACK)
+				if (index + PageWidth < NumTextures)
+					index += PageWidth;
+		}
+
+		// Redraw menu and update selected texture if cursor has moved.
+		if (oldindex != index)
+		{
+			DrawTextureMenu(index);
+			oldindex = index;
+		}
+		count++;
+		Delay(1);
+	}
+
+	// End texture menu.
+	ConsoleCommand(StrParam(s:"puke 36", s:" ", d:index));
+	ClearTextureMenu();
+	EndMenu();
+}
+
+// Executed when the texture menu is closed.
+script 36 (int texture) NET
+{
+	UnlockPlayer();
+	TakeInventory("SC_MenuOpened", 1);
+
+	TakeInventory("SC_SelectedTexture", 9999);
+	GiveInventory("SC_SelectedTexture", texture);
+}
+
+function void DrawTextureMenu(int selected)
+{
+	int pagenum = selected / (PageWidth * PageHeight);
+	int firsttex = pagenum * PageWidth * PageHeight;
+	
+	for (int i = 0; i < PageWidth * PageHeight; i++)
+	{
+		int texindex = i + firsttex;
+		int id = i * 2 + HID_MENU; // 2 identifiers per item.
+
+		// If the texture doesn't exist, cleat it.
+		if (texindex >= NumTextures)
+		{
+			HudMessage(s:""; HUDMSG_PLAIN, id, 0, 0, 0, 0);
+			HudMessage(s:""; HUDMSG_PLAIN, id + 1, 0, 0, 0, 0);
+			continue;
+		}
+
+		// Calculate logical X and Y coordinates from array index.
+		int x = i % PageWidth;
+		int y = i / PageHeight;
+
+		// Item sizes.
+		int texwidth = (ScreenWidth<<16) / PageWidth;
+		int texheight = (ScreenHeight<<16) / PageHeight;
+
+		// Add some borders.
+		int borderx = texwidth / 2;
+		int bordery = texheight / 3;
+
+		texheight = texheight * 4 / 5; // Make texture tiles less tall.
+
+		// Calculate final offsets.
+		int xoff = borderx + texwidth * x;
+		int yoff = bordery + texheight * y;
+
+		// Draw texture.
+		SetHudSize(ScreenWidth, ScreenHeight, true);
+		SetFont(Textures[texindex]);
+		HudMessage(s:"A"; HUDMSG_PLAIN, id, CR_WHITE, xoff, yoff, 0);
+
+		// Setup text drawing with bigger text.
+		SetHudSize(ScreenWidth / 2, ScreenHeight / 2, true);
+		xoff /= 2;
+		yoff /= 2;
+		texwidth /= 2;
+		texheight /= 2;
+		yoff += texheight / 2 + 20.0;
+
+		// Mark selected texture's name in yellow.
+		int color;
+		if (texindex == selected)
+		{
+			color = CR_YELLOW;
+			SetFont("BIGFONT");
+		}
+		else
+		{
+			color = CR_WHITE;
+			SetFont("SMALLFONT");
+		}
+		HudMessage(s:Textures[texindex]; HUDMSG_PLAIN, id + 1, color, xoff, yoff, 0);
+	}
+}
+
+function void ClearTextureMenu(void)
+{
+	// * 2 is here because there are two HudMessages per item.
+	for (int i = 0; i < PageWidth * PageHeight * 2; i++)
+		HudMessage(s:""; HUDMSG_PLAIN, i + HID_MENU, 0, 0, 0, 0);
+	SetHudSize(0, 0, 0);
+}

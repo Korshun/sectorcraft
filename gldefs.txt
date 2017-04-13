@@ -1,0 +1,299 @@
+// Re-add dynamic lights to SectorCraft's actor replacements.
+
+object SC_Doomer
+{
+    frame PLAYF { light ZOMBIEATK }
+}
+
+// ----------------------
+// -- Doom Decorations --
+// ----------------------
+
+object SCA_ExplosiveBarrel
+{
+    frame BAR1  { light BARREL    }
+
+    frame BEXPC { light ROCKET_X1 }
+    frame BEXPD { light ROCKET_X2 }
+    frame BEXPE { light ROCKET_X3 }
+}
+
+object SCA_Column
+{
+    frame COLU { light LAMP }
+}
+
+object SCA_TechLamp2
+{
+    frame TLP2 { light SMALLLAMP }
+}
+
+object SCA_TechLamp
+{
+    frame TLMP { light BIGLAMP }
+}
+
+object SCA_RedTorch
+{
+    frame TRED { light BIGREDTORCH }
+}
+
+object SCA_GreenTorch
+{
+    frame TGRN { light BIGGREENTORCH }
+}
+
+object SCA_BlueTorch
+{
+    frame TBLU { light BIGBLUETORCH }
+}
+
+object SCA_ShortRedTorch
+{
+    frame SMRT { light SMALLREDTORCH }
+}
+
+object SCA_ShortGreenTorch
+{
+    frame SMGT { light SMALLGREENTORCH }
+}
+
+object SCA_ShortBlueTorch
+{
+    frame SMBT { light SMALLBLUETORCH }
+}
+
+object SCA_BurningBarrel
+{
+    frame FCAN { light FIREBARREL }
+}
+
+object SCA_HeadCandles
+{
+    frame POL3 { light SKULLCANDLES }
+}
+
+object SCA_Candlestick
+{
+    frame CAND { light CANDLE }
+}
+
+object SCA_Candelabra
+{
+    frame CBRA { light CANDELABRA }
+}
+
+
+// ----------------
+// -- Doom Items --
+// ----------------
+
+object SCA_SoulSphere
+{
+    frame SOUL { light SOULSPHERE }
+}
+
+object SCA_InvulnerabilitySphere
+{
+    frame PINV { light INVULN }
+}
+
+object SCA_BlurSphere
+{
+    frame PINS { light BLURSPHERE1 }
+
+    frame PINSA { light BLURSPHERE2 }
+    frame PINSB { light BLURSPHERE3 }
+    frame PINSC { light BLURSPHERE4 }
+    frame PINSD { light BLURSPHERE5 }
+}
+
+object SCA_HealthBonus
+{
+    frame BON1 { light HEALTHPOTION }
+}
+
+object SCA_ArmorBonus
+{
+    frame BON2 { light ARMORBONUS }
+}
+
+
+object SCA_BlueCard
+{
+    frame BKEY { light HEALTHPOTION }
+}
+
+object SCA_BlueSkull
+{
+    frame BSKU { light HEALTHPOTION }
+}
+
+object SCA_YellowCard
+{
+    frame YKEY { light YELLOWKEY }
+}
+
+object SCA_YellowSkull
+{
+    frame YSKU { light YELLOWKEY }
+}
+
+object SCA_RedCard
+{
+    frame RKEY { light REDKEY }
+}
+
+object SCA_RedSkull
+{
+    frame RSKU { light REDKEY }
+}
+
+
+object SCA_GreenArmor
+{
+    frame ARM1A { light GREENARMOR1 }
+    frame ARM1B { light GREENARMOR2 }
+}
+
+object SCA_BlueArmor
+{
+    frame ARM2A { light BLUEARMOR1 }
+    frame ARM2B { light BLUEARMOR2 }
+}
+
+
+// ------------------
+// -- Doom Enemies --
+// ------------------
+
+object SCA_ZombieMan
+{
+    frame POSSF { light ZOMBIEATK }
+}
+
+object SCA_ShotgunGuy
+{
+    frame SPOSF { light ZOMBIEATK }
+}
+
+object SCA_ChaingunGuy
+{
+    frame CPOSE { light ZOMBIEATK }
+    frame CPOSF { light ZOMBIEATK }
+}
+
+object SCA_LostSoul
+{
+    frame SKULA { light LOSTSOUL    }
+    frame SKULB { light LOSTSOUL    }
+    frame SKULC { light LOSTSOUL    }
+    frame SKULD { light LOSTSOUL    }
+    frame SKULE { light LOSTSOUL    }
+    frame SKULF { light LOSTSOUL    }
+    frame SKULG { light LOSTSOUL    }
+
+    frame SKULH { light LOSTSOUL_X1 }
+    frame SKULI { light LOSTSOUL_X2 }
+    frame SKULJ { light LOSTSOUL_X3 }
+    frame SKULK { light LOSTSOUL_X4 }
+}
+
+object SCA_Archvile
+{
+    frame VILEH { light ARCHATK1 }
+    frame VILEI { light ARCHATK2 }
+    frame VILEJ { light ARCHATK3 }
+    frame VILEK { light ARCHATK4 }
+    frame VILEL { light ARCHATK4 }
+    frame VILEM { light ARCHATK4 }
+    frame VILEN { light ARCHATK5 }
+    frame VILEO { light ARCHATK6 }
+    frame VILEP { light ARCHATK7 }
+
+    frame VILE[ { light ARCHRES }
+    frame VILE\ { light ARCHRES }
+    frame VILE] { light ARCHRES }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ------------------
+// -- Items --
+// ------------------
+
+object SCA_MaxHealthBonus
+{
+    frame BON3 { light MAXHEALTHPOTION }
+}
+
+object SCA_MaxArmorBonus
+{
+    frame BON4 { light MAXARMORBONUS }
+}
+
+object SCA_RedArmor
+{
+    frame ARM3A0 { light REDARMOR1 }
+    frame ARM3B0 { light REDARMOR2 }
+}
+
+// ------------------
+// -- Weapons --
+// ------------------
+
+// ------------------
+// -- Decor --
+// ------------------
+
+object SCA_RedEvilEye
+{
+    frame CEYR { light RedEvilEye }
+}
+
+object SCA_BlueEvilEye
+{
+    frame CEYB { light BlueEvilEye }
+}
+
+object SCA_RedCandleStick
+{
+    frame CANR { light RedCandleStick }
+}
+
+object SCA_BlueCandleStick
+{
+    frame CANB { light BlueCandleStick }
+}
+
+object SCA_RedTechLamp
+{
+    frame TLP3 { light RedTechLamp }
+}
+
+object SCA_RedTechLamp2
+{
+    frame TLP4 { light RedTechLamp2 }
+}
+
+object SCA_RedColumn
+{
+    frame RCOL { light RedColumn }
+}
+
+object SCA_BlueColumn
+{
+    frame BCOL { light BlueColumn }
+}

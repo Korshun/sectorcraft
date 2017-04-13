@@ -1,0 +1,271 @@
+//===========================
+// COLOR PICKER MENU
+//===========================
+
+#define COLORSTEP 8
+#define NUM_COLORSTEPS 32 // 256 / COLORSTEP
+
+// Main menu script
+int color[NUM_COLOR_COMPONENTS]; // Stupid ACC doesn't allow local arrays.
+script 15 (int player) CLIENTSIDE
+{
+	if (!BeginMenu(player))
+		terminate;
+
+	int copied = -1;
+
+	int index = 0;
+	int buttons = 0;
+	int count = 0;
+	int redraw = true;
+	while (!(buttons & BT_USE) && !(buttons & BT_ATTACK))
+	{
+		if (CheckInventory("SC_SelectedColorCopied") != copied)
+		{
+			copied = CheckInventory("SC_SelectedColorCopied");
+			color[0] = CheckInventory("SC_SelectedColorR");
+			color[1] = CheckInventory("SC_SelectedColorG");
+			color[2] = CheckInventory("SC_SelectedColorB");
+			//color[3] = CheckInventory("SC_SelectedColorDesat");
+			redraw = true;
+		}
+
+		buttons = GetPlayerInput(-1, INPUT_BUTTONS);
+
+		if (!(count % 4)) // Poll input with lower frequency.
+		{
+			if (buttons & BT_BACK)
+				if (index < NUM_COLOR_COMPONENTS - 1)
+				{
+					index++;
+					redraw = true;
+				}
+
+			if (buttons & BT_FORWARD)
+				if (index > 0)
+				{
+					index--;
+					redraw = true;
+				}
+		}
+
+		if (!(count % 3)) // Poll input with lower frequency.
+		{
+			if (buttons & BT_LEFT || buttons & BT_MOVELEFT)
+			{
+				if (color[index] == 255)
+					color[index] = 256;
+				color[index] = clamp(color[index] - COLORSTEP, 0, 255);
+				redraw = true;
+			}
+			if (buttons & BT_RIGHT || buttons & BT_MOVERIGHT)
+			{
+				color[index] = clamp(color[index] + COLORSTEP, 0, 255);
+				redraw = true;
+			}
+		}
+
+		if (redraw)
+		{
+			DrawColorMenu(index);
+			redraw = false;
+		}
+		count++;
+		Delay(1);
+	}
+
+	ConsoleCommand(StrParam(s:"puke 16 ", d:color[0], s:" ", d:color[1], s:" ", d:color[2]));
+	ClearColorMenu();
+	EndMenu();
+}
+
+// End color menu on the server.
+script 16 (int r, int g, int b) NET
+{
+	UnlockPlayer();
+	TakeInventory("SC_MenuOpened", 1);
+
+	TakeInventory("SC_SelectedColorR",   9999);
+	TakeInventory("SC_SelectedColorG", 9999);
+	TakeInventory("SC_SelectedColorB",  9999);
+	//TakeInventory("SC_SelectedColorDesat", 9999);
+
+	GiveInventory("SC_SelectedColorR",   r);
+	GiveInventory("SC_SelectedColorG", g);
+	GiveInventory("SC_SelectedColorB",  b);
+	//GiveInventory("SC_SelectedColorDesat", d);
+}
+
+// Draws a slider.
+// Returns next free id (decreased).
+// No, I am too lazy to generalize it.
+function int DrawSlider(int value, int step, int maxsteps, int id, int TEXTCOLOR, int x, int y, int elemsize, str images)
+{
+	SetHudSize(320, 240, true);
+
+	str beginpic  = StrParam(s:images, s:"_B");
+	str middlepic = StrParam(s:images, s:"_M");
+	str endpic    = StrParam(s:images, s:"_E");
+	str cursorpic = StrParam(s:images, s:"_C");
+
+	int position = value / step;
+	if (value % step == step - 1)
+		position++; // Hack :).
+
+	// Middle part.
+	SetFont(middlepic);
+	for (int i = 0; i <= NUM_COLORSTEPS / 2; i++)
+	{
+		HudMessage(s:"A"; HUDMSG_PLAIN, id, TEXTCOLOR, x + i * elemsize, y, 0);
+		id--;
+	}
+
+	// Begining, end and cursor.
+	SetFont(beginpic);
+	HudMessage(s:"A"; HUDMSG_PLAIN, --id, TEXTCOLOR, x - elemsize + 4.0, y, 0);
+	SetFont(endpic);
+	HudMessage(s:"A"; HUDMSG_PLAIN, --id, TEXTCOLOR, x + (maxsteps + 1) * (elemsize / 2), y, 0);
+	SetFont(cursorpic);
+	HudMessage(s:"A"; HUDMSG_PLAIN, --id, TEXTCOLOR, x + position * (elemsize / 2), y, 0);
+
+	// Numeric value.
+	SetFont("SMALLFONT");
+	SetHudSize(480, 360, true);
+	HudMessage(d:value; HUDMSG_PLAIN, --id, TEXTCOLOR, FixedMul(x, 1.5) - 24.0, FixedMul(y, 1.5), 0);
+
+	return id - 1;
+}
+
+function void DrawColorMenu(int index)
+{
+	// Header.
+	SetHudSize(0, 0, 0);
+	SetFont("BIGFONT");
+	HudMessage(s:"Select Color"; HUDMSG_PLAIN, HID_RMENU + 1, CR_ORANGE, 0.5, 0.1, 0);
+
+	// It is simplier to maintain correct drawing order by counting in reverse.
+	int id = HID_RMENU;
+
+	int elemsize = 8.0;
+	int beginX = 160.0 - FixedMul(NUM_COLORSTEPS<<16, elemsize / 2) / 2;
+
+	int color0 = CR_ORANGE;
+	int color1 = CR_ORANGE;
+	int color2 = CR_ORANGE;
+	switch (index)
+	{
+	case 0: color0 = CR_GOLD; break;
+	case 1: color1 = CR_GOLD; break;
+	case 2: color2 = CR_GOLD; break;
+	}
+
+	id = DrawSlider(color[0], COLORSTEP, NUM_COLORSTEPS, id, color0, beginX, 60.0,  elemsize, "SLIDRR");
+	id = DrawSlider(color[1], COLORSTEP, NUM_COLORSTEPS, id, color1, beginX, 100.0, elemsize, "SLIDRG");
+	id = DrawSlider(color[2], COLORSTEP, NUM_COLORSTEPS, id, color2, beginX, 140.0, elemsize, "SLIDRB");
+
+}
+
+function void ClearColorMenu(void)
+{
+	// Clear header
+	HudMessage(s:""; HUDMSG_PLAIN, HID_RMENU + 1, 0, 0, 0, 0);
+
+	// Every slider uses (NUM_COLORSTEPS + 1) + 5 hudmessages.
+	// (bar + begin + end + leftnum + rightnum + slider).
+	for (int i = 0; i < (NUM_COLORSTEPS + 1 + 5) * 3; i++)
+		HudMessage(s:""; HUDMSG_PLAIN, HID_RMENU - i, 0, 0, 0, 0);
+
+	SetHudSize(0, 0, 0);
+}
+
+
+//===========================
+// FADE COLOR PICKER MENU (copypaste and reuses color menu)
+//===========================
+
+// Main menu script.
+script 17 (int player) CLIENTSIDE
+{
+	if (!BeginMenu(player))
+		terminate;
+
+	int copied = -1;
+
+	int index = 0;
+	int buttons = 0;
+	int count = 0;
+	int redraw = true;
+	while (!(buttons & BT_USE) && !(buttons & BT_ATTACK))
+	{
+		if (CheckInventory("SC_SelectedFadeCopied") != copied)
+		{
+			copied = CheckInventory("SC_SelectedFadeCopied");
+			color[0] = CheckInventory("SC_SelectedFadeR");
+			color[1] = CheckInventory("SC_SelectedFadeG");
+			color[2] = CheckInventory("SC_SelectedFadeB");
+			redraw = true;
+		}
+
+		buttons = GetPlayerInput(-1, INPUT_BUTTONS);
+
+		if (!(count % 4)) // Poll input with lower frequency.
+		{
+			if (buttons & BT_BACK)
+				if (index < NUM_COLOR_COMPONENTS - 1)
+				{
+					index++;
+					redraw = true;
+				}
+
+			if (buttons & BT_FORWARD)
+				if (index > 0)
+				{
+					index--;
+					redraw = true;
+				}
+		}
+
+		if (!(count % 3)) // Poll input with lower frequency.
+		{
+			if (buttons & BT_LEFT || buttons & BT_MOVELEFT)
+			{
+				if (color[index] == 255)
+					color[index] = 256;
+				color[index] = clamp(color[index] - COLORSTEP, 0, 255);
+				redraw = true;
+			}
+			if (buttons & BT_RIGHT || buttons & BT_MOVERIGHT)
+			{
+				color[index] = clamp(color[index] + COLORSTEP, 0, 255);
+				redraw = true;
+			}
+		}
+
+		if (redraw)
+		{
+			DrawColorMenu(index);
+			redraw = false;
+		}
+		count++;
+		Delay(1);
+	}
+
+	ConsoleCommand(StrParam(s:"puke 18 ", d:color[0], s:" ", d:color[1], s:" ", d:color[2]));
+	ClearColorMenu();
+	EndMenu();
+}
+
+// End fade color menu on the server.
+script 18 (int r, int g, int b) NET
+{
+	UnlockPlayer();
+	TakeInventory("SC_MenuOpened", 1);
+
+	TakeInventory("SC_SelectedFadeR", 9999);
+	TakeInventory("SC_SelectedFadeG", 9999);
+	TakeInventory("SC_SelectedFadeB", 9999);
+
+	GiveInventory("SC_SelectedFadeR", r);
+	GiveInventory("SC_SelectedFadeG", g);
+	GiveInventory("SC_SelectedFadeB", b);
+}

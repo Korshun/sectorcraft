@@ -1,0 +1,39 @@
+//===========================
+// MENU SYSTEM
+//===========================
+
+int MenuOpened = 0; // Clientside variable.
+
+function int BeginMenu(int player)
+{
+	if (ConsolePlayerNumber() != player || MenuOpened)
+		return 0;
+	MenuOpened = 1;
+	//LockPlayer(); // For clientside prediction.
+	ConsoleCommand("puke 101"); // Lock player on server side.
+	return 1;
+}
+
+function void LockPlayer(void)
+{
+	SetPlayerProperty(0, true, PROP_FROZEN);
+	SetActorVelocity(0, 0, 0, 0, false, false);
+}
+
+function void UnlockPlayer(void)
+{
+	SetPlayerProperty(0, false, PROP_FROZEN);
+}
+
+function void EndMenu(void)
+{
+	MenuOpened = 0;
+	UnlockPlayer(); // For clientside prediction.
+}
+
+// Locks the player on server side.
+script 101 (void) NET
+{
+	LockPlayer();
+	GiveInventory("SC_MenuOpened", 1);
+}

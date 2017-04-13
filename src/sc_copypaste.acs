@@ -1,0 +1,529 @@
+//=========================
+// COPY/PASTE
+//=========================
+
+// SC_BufferInfo bits.
+// F = Floor, C = Ceiling, S = Sector.
+#define SAVED_F_HEIGHT 1
+#define SAVED_C_HEIGHT 2
+#define SAVED_LIGHT 4
+#define SAVED_F_TEXTURE 8
+#define SAVED_C_TEXTURE 16
+#define SAVED_F_ACTOR 32
+#define SAVED_COLOR 64
+#define SAVED_FADE 128
+#define SAVED_F_OFFSET 256
+#define SAVED_C_OFFSET 512
+
+// debugging script.
+/*
+script 235 ENTER
+{
+	SetFont("BIGFONT");
+	HudMessage(
+		s:"Flags: ", d:CheckInventory("SC_BufferInfo"),
+		s:"\n",
+		s:"\nFh: ", d:CheckInventory("SC_CopiedFHeight"),
+		s:"\nCh: ", d:CheckInventory("SC_CopiedCHeight"),
+		s:"\nSl: ", d:CheckInventory("SC_CopiedLight"),
+		s:"\nFt: ", d:CheckInventory("SC_CopiedFTexture"), s:" ", s:Textures[CheckInventory("SC_CopiedFTexture")],
+		s:"\nCt: ", d:CheckInventory("SC_CopiedCTexture"), s:" ", s:Textures[CheckInventory("SC_CopiedCTexture")]
+	; HUDMSG_PLAIN, 1, CR_YELLOW, 0.5, 0.5, 0);
+	Delay(1);
+	Restart;
+}
+*/
+
+// Writes copied property to buffer.
+function int Copy(str actor, int value)
+{
+	TakeInventory(actor, 99999);
+	GiveInventory(actor, value);
+	return value;
+}
+
+// Copy idividual sector properties.
+function int CopyFHeight(int s)
+{
+	return Copy("SC_SavedFHeight", (GetFloorHeight(s)) - GetCVar("sc_minheight"));
+}
+function int CopyCHeight(int s)
+{
+	return Copy("SC_SavedCHeight", (GetCeilingHeight(s)) - GetCVar("sc_minheight"));
+}
+
+function int CopyFTexture(int s)
+{
+	return Copy("SC_SavedFTexture", WorldTextures[s][0][FLOOR]);
+}
+function void CopyLTextures(int s)
+{
+	Copy("SC_SavedLTexture0", WorldTextures[s][1][FLOOR]);
+	Copy("SC_SavedLTexture1", WorldTextures[s][2][FLOOR]);
+	Copy("SC_SavedLTexture2", WorldTextures[s][3][FLOOR]);
+	Copy("SC_SavedLTexture3", WorldTextures[s][4][FLOOR]);
+}
+
+function void CopyFOffset(int s)
+{
+	SaveSigned("SC_SavedFOffsetX", WorldTextureOffsets[s][0][FLOOR][OFFSET_X]);
+	SaveSigned("SC_SavedFOffsetY", WorldTextureOffsets[s][0][FLOOR][OFFSET_Y]);
+}
+function void CopyLOffsets(int s)
+{
+	SaveSigned("SC_SavedLOffset0X", WorldTextureOffsets[s][1][FLOOR][OFFSET_X]);
+	SaveSigned("SC_SavedLOffset0Y", WorldTextureOffsets[s][1][FLOOR][OFFSET_Y]);
+	SaveSigned("SC_SavedLOffset1X", WorldTextureOffsets[s][2][FLOOR][OFFSET_X]);
+	SaveSigned("SC_SavedLOffset1Y", WorldTextureOffsets[s][2][FLOOR][OFFSET_Y]);
+	SaveSigned("SC_SavedLOffset2X", WorldTextureOffsets[s][3][FLOOR][OFFSET_X]);
+	SaveSigned("SC_SavedLOffset2Y", WorldTextureOffsets[s][3][FLOOR][OFFSET_Y]);
+	SaveSigned("SC_SavedLOffset3X", WorldTextureOffsets[s][4][FLOOR][OFFSET_X]);
+	SaveSigned("SC_SavedLOffset3Y", WorldTextureOffsets[s][4][FLOOR][OFFSET_Y]);
+}
+
+function int CopyCTexture(int s)
+{
+	return Copy("SC_SavedCTexture", WorldTextures[s][0][CEILING]);
+}
+function void CopyUTextures(int s)
+{
+	Copy("SC_SavedUTexture0", WorldTextures[s][1][CEILING]);
+	Copy("SC_SavedUTexture1", WorldTextures[s][2][CEILING]);
+	Copy("SC_SavedUTexture2", WorldTextures[s][3][CEILING]);
+	Copy("SC_SavedUTexture3", WorldTextures[s][4][CEILING]);
+}
+
+function void CopyCOffset(int s)
+{
+	SaveSigned("SC_SavedCOffsetX", WorldTextureOffsets[s][0][CEILING][OFFSET_X]);
+	SaveSigned("SC_SavedCOffsetY", WorldTextureOffsets[s][0][CEILING][OFFSET_Y]);
+}
+function void CopyUOffsets(int s)
+{
+	SaveSigned("SC_SavedUOffset0X", WorldTextureOffsets[s][1][CEILING][OFFSET_X]);
+	SaveSigned("SC_SavedUOffset0Y", WorldTextureOffsets[s][1][CEILING][OFFSET_Y]);
+	SaveSigned("SC_SavedUOffset1X", WorldTextureOffsets[s][2][CEILING][OFFSET_X]);
+	SaveSigned("SC_SavedUOffset1Y", WorldTextureOffsets[s][2][CEILING][OFFSET_Y]);
+	SaveSigned("SC_SavedUOffset2X", WorldTextureOffsets[s][3][CEILING][OFFSET_X]);
+	SaveSigned("SC_SavedUOffset2Y", WorldTextureOffsets[s][3][CEILING][OFFSET_Y]);
+	SaveSigned("SC_SavedUOffset3X", WorldTextureOffsets[s][4][CEILING][OFFSET_X]);
+	SaveSigned("SC_SavedUOffset3Y", WorldTextureOffsets[s][4][CEILING][OFFSET_Y]);
+}
+
+
+function int CopyFActor(int s)
+{
+	return Copy("SC_SavedActor", GetFloorActor(s));
+}
+
+function int CopyLight(int s)
+{
+	return Copy("SC_SavedLight", GetSectorLightLevel(s));
+}
+
+function int CopyColorR(int s)
+{
+	return Copy("SC_SavedColorR", GetLightColor(s, COLOR_RED));
+}
+function int CopyColorG(int s)
+{
+	return Copy("SC_SavedColorG", GetLightColor(s, COLOR_GREEN));
+}
+function int CopyColorB(int s)
+{
+	return Copy("SC_SavedColorB", GetLightColor(s, COLOR_BLUE));
+}
+
+function int CopyFadeR(int s)
+{
+	return Copy("SC_SavedFadeR", GetFadeColor(s, COLOR_RED));
+}
+function int CopyFadeG(int s)
+{
+	return Copy("SC_SavedFadeG", GetFadeColor(s, COLOR_GREEN));
+}
+function int CopyFadeB(int s)
+{
+	return Copy("SC_SavedFadeB", GetFadeColor(s, COLOR_BLUE));
+}
+
+
+// Copy.
+script 41 (int what)
+{
+	SetCursorActor(0);
+	if (!Target())
+		terminate;
+
+	SetActivatorToTarget(0);
+
+	int s;
+	int info = CheckInventory("SC_BufferInfo");
+	int value;
+
+	int r, g, b; // For color copying.
+
+	// Copy what is needed.
+	switch (what)
+	{
+	case 0: // Everything.
+		// Old way - copy everything.
+		s = SelectFloor();
+		if (!s)
+			s = SelectCeiling();
+
+		info |= SAVED_LIGHT 
+		     | SAVED_COLOR
+		     | SAVED_FADE 
+		     | SAVED_F_HEIGHT | SAVED_C_HEIGHT
+		     | SAVED_F_TEXTURE | SAVED_C_TEXTURE
+		     | SAVED_F_OFFSET | SAVED_C_OFFSET
+		     | SAVED_F_ACTOR;
+		
+		CopyLight(s);
+
+		CopyColorR(s);
+		CopyColorG(s);
+		CopyColorB(s);
+
+		CopyFadeR(s);
+		CopyFadeG(s);
+		CopyFadeB(s);
+
+		CopyFHeight(s);
+		CopyCHeight(s);
+
+		CopyFTexture(s);
+		CopyLTextures(s);
+		CopyCTexture(s);
+		CopyUTextures(s);
+
+		CopyFOffset(s);
+		CopyLOffsets(s);
+		CopyCOffset(s);
+		CopyUOffsets(s);
+		
+		CopyFActor(s);
+
+		NotifyCopy("Copied all sector properties.");
+		break;
+
+	/*
+		s = SelectFloor();
+		if (s)
+		{
+			info |= SAVED_LIGHT 
+			     | SAVED_COLOR
+			     | SAVED_FADE 
+			     | SAVED_F_HEIGHT 
+			     | SAVED_F_TEXTURE 
+			     | SAVED_F_ACTOR;
+
+			CopyLight(s);
+
+			CopyColorR(s);
+			CopyColorG(s);
+			CopyColorB(s);
+
+			CopyFadeR(s);
+			CopyFadeG(s);
+			CopyFadeB(s);
+
+			CopyFHeight(s);
+
+			CopyFTexture(s);
+			CopyLTextures(s);
+			
+			CopyFActor(s);
+
+			NotifyCopy("Copied all floor properties.");
+			break;
+		}
+
+		s = SelectCeiling();
+		if (s)
+		{
+			info |= SAVED_LIGHT 
+			     | SAVED_COLOR 
+			     | SAVED_FADE 
+			     | SAVED_C_HEIGHT 
+			     | SAVED_C_TEXTURE;
+
+			CopyLight(s);
+
+			CopyColorR(s);
+			CopyColorG(s);
+			CopyColorB(s);
+
+			CopyFadeR(s);
+			CopyFadeG(s);
+			CopyFadeB(s);
+
+			CopyCHeight(s);
+
+			CopyCTexture(s);
+			CopyUTextures(s);
+
+			NotifyCopy("Copied all ceiling properties.");
+			break;
+		}
+		break;
+	*/
+
+	case 1: // Height.
+		s = SelectFloor();
+		if (s)
+		{
+			info |= SAVED_F_HEIGHT;
+			value = CopyFHeight(s);
+			NotifyCopy(StrParam(s:"Copied floor height ", d:value + GetCVar("sc_minheight"), s:"."));
+			break;
+		}
+
+		s = SelectCeiling();
+		if (s)
+		{
+			info |= SAVED_C_HEIGHT;
+			value = CopyCHeight(s);
+			NotifyCopy(StrParam(s:"Copied ceiling height ", d:value + GetCVar("sc_minheight"), s:"."));
+			break;
+		}
+		break;
+
+	case 2: // Light level.
+		info |= SAVED_LIGHT;
+		value = CopyLight(Target());
+		NotifyCopy(StrParam(s:"Copied light level ", d:value, s:"."));
+		break;
+
+	case 3: // Texture.
+		s = SelectFloor();
+		if (s)
+		{
+			info |= SAVED_F_TEXTURE;
+			value = CopyFTexture(s);
+			NotifyCopy(StrParam(s:"Copied floor texture \"", s:Textures[value], s:"\"."));
+			break;
+		}
+
+		s = SelectCeiling();
+		if (s)
+		{
+			info |= SAVED_C_TEXTURE;
+			value = CopyCTexture(s);
+			NotifyCopy(StrParam(s:"Copied ceiling texture \"", s:Textures[value], s:"\"."));
+			break;
+		}
+		break;
+
+	case 4: // Actor.
+		s = SelectFloor();
+		if (!s)
+			s = SelectCeiling();
+		if (!s)
+			break;
+
+		info |= SAVED_F_ACTOR;
+		value = CopyFActor(s);
+		if (value == 0)
+			NotifyCopy("Copied actor \"Nothing\"");
+		else
+			NotifyCopy(StrParam(s:"Copied actor \"", s:Actors[value][ACTOR_DISPLAYNAME], s:"\"."));
+		break;
+
+	case 5: // Light color.
+		info |= SAVED_COLOR;
+		r = CopyColorR(Target());
+		g = CopyColorG(Target());
+		b = CopyColorB(Target());
+		NotifyCopy(StrParam(s:"Copied light color",
+			s:" \cg", d:r, s:" \cd", d:g, s:" \ch", d:b, s:"\c-."));
+		break;
+
+	case 6: // Fade color.
+		info |= SAVED_FADE;
+		r = CopyFadeR(Target());
+		g = CopyFadeG(Target());
+		b = CopyFadeB(Target());
+		NotifyCopy(StrParam(s:"Copied fade color",
+			s:" \cg", d:r, s:" \cd", d:g, s:" \ch", d:b, s:"\c-."));
+		break;
+	}
+
+	// Write new buffer info.
+	TakeInventory("SC_BufferInfo", 9999);
+	GiveInventory("SC_BufferInfo", info);
+}
+
+// Clear paste buffer
+script 42 (int prop)
+{
+	int info = CheckInventory("SC_BufferInfo");
+	str what;
+
+	if (prop == 0) // Clear all.
+	{
+		info = 0;
+		NotifyClear("Cleared paste buffer.");
+		TakeInventory("SC_BufferInfo", 9999);
+		terminate;
+	}
+
+	switch (prop) // Clear one or two properties.
+	{
+	case 1: info &= ~(SAVED_F_HEIGHT | SAVED_C_HEIGHT);   what = "heights"; break;
+	case 2: info &= ~SAVED_LIGHT;                         what = "light level"; break;
+	case 3: info &= ~(SAVED_F_TEXTURE | SAVED_C_TEXTURE); what = "textures"; break;
+	case 4: info &= ~SAVED_F_ACTOR;                       what = "actor"; break;
+	case 5: info &= ~SAVED_COLOR;                         what = "light color"; break;
+	case 6: info &= ~SAVED_FADE;                          what = "fade color"; break;
+	}
+
+	TakeInventory("SC_BufferInfo", 9999);
+	GiveInventory("SC_BufferInfo", info);
+
+	NotifyClear(StrParam(s:"Cleared saved ", s:what, s:"."));
+}
+
+
+//=========================
+// ACTIONS
+//=========================
+
+// All scripts called by tool projectiles must begin with
+// SetCursorActor(0);
+// if (!Target())
+//     terminate;
+//
+// Also SetActivatorToTarget(0) may be added immediately to simplify code.
+
+// Hudmessage ID used for action result display.
+#define HID_ACTIONDISPLAY 10
+#define HID_CENTERMESSAGE 11
+
+// Paste.
+script 40 (int sectorpaste)
+{
+	SetCursorActor(0);
+	if (!Target())
+		terminate;
+	SetActivatorToTarget(0);
+
+	int s; // The sector to change.
+
+	if (sectorpaste) // Simply select sector.
+		s = Target();
+	else // Select flat.
+	{
+		s = SelectFloor();
+		if (!s)
+			s = SelectCeiling();
+		if (!s)
+			terminate;
+	}
+
+	// Read paste buffer bitfield.
+	int info = CheckInventory("SC_BufferInfo");
+	if (info == 0)
+	{
+		NotifyPaste("Nothing to paste.");
+		terminate;
+	}
+
+	// Special height changing order to avoid bugs.
+	int oldfloor = GetFloorHeight(s);
+	int oldceil  = GetCeilingHeight(s);
+	int newfloor = CheckInventory("SC_SavedFHeight") + GetCVar("sc_minheight");
+	int newceil  = CheckInventory("SC_SavedCHeight") + GetCVar("sc_minheight");
+	int floordiff = newfloor - oldfloor;
+	int ceildiff  = newceil - oldceil;
+	if (info & SAVED_F_HEIGHT && info & SAVED_C_HEIGHT)
+	{
+		if (ceildiff > 0 && floordiff > 0)
+		{
+			// Move ceiling first.
+			SetCeilingHeight(s, newceil);
+			Delay(1);
+			SetFloorHeight(s, newfloor);
+		}
+		else if (floordiff < 0 && ceildiff < 0)
+		{
+			// Move floor first.
+			SetFloorHeight(s, newfloor);
+			Delay(1);
+			SetCeilingHeight(s, newceil);
+		}
+		else
+		{
+			// Either order doesn't matter
+			// or such height combination is impossible, so let the bugs be there.
+			SetFloorHeight(s, newfloor);
+			SetCeilingHeight(s, newceil);
+		}
+	}
+	else if (info & SAVED_F_HEIGHT)
+		SetFloorHeight(s, newfloor);
+	else if (info & SAVED_C_HEIGHT)
+		SetCeilingHeight(s, newceil);
+
+	// Paste whatever else needed.
+	if (info & SAVED_LIGHT)
+		SetLightLevel(s, CheckInventory("SC_SavedLight"));
+	if (info & SAVED_F_TEXTURE)
+	{
+		//SetTexture(s, CheckInventory("SC_SavedFTexture"), TEXTURE_BOTTOM);
+		SetFloorTexture(s, CheckInventory("SC_SavedFTexture"));
+		SetLowerTexture(s, 1, CheckInventory("SC_SavedLTexture0"));
+		SetLowerTexture(s, 2, CheckInventory("SC_SavedLTexture1"));
+		SetLowerTexture(s, 3, CheckInventory("SC_SavedLTexture2"));
+		SetLowerTexture(s, 4, CheckInventory("SC_SavedLTexture3"));
+	}
+	if (info & SAVED_C_TEXTURE)
+	{
+		//SetTexture(s, CheckInventory("SC_SavedCTexture"), TEXTURE_TOP);
+		SetCeilingTexture(s, CheckInventory("SC_SavedCTexture"));
+		SetUpperTexture(s, 1, CheckInventory("SC_SavedUTexture0"));
+		SetUpperTexture(s, 2, CheckInventory("SC_SavedUTexture1"));
+		SetUpperTexture(s, 3, CheckInventory("SC_SavedUTexture2"));
+		SetUpperTexture(s, 4, CheckInventory("SC_SavedUTexture3"));
+	}
+	if (info & SAVED_F_OFFSET)
+	{
+		SetTextureOffset(s, 0, FLOOR, ReadSigned("SC_SavedFOffsetX"), ReadSigned("SC_SavedFOffsetY"));
+		SetTextureOffset(s, 1, FLOOR, ReadSigned("SC_SavedLOffset0X"), ReadSigned("SC_SavedLOffset0Y"));
+		SetTextureOffset(s, 2, FLOOR, ReadSigned("SC_SavedLOffset1X"), ReadSigned("SC_SavedLOffset1Y"));
+		SetTextureOffset(s, 3, FLOOR, ReadSigned("SC_SavedLOffset2X"), ReadSigned("SC_SavedLOffset2Y"));
+		SetTextureOffset(s, 4, FLOOR, ReadSigned("SC_SavedLOffset3X"), ReadSigned("SC_SavedLOffset3Y"));
+	}
+	if (info & SAVED_C_OFFSET)
+	{
+		SetTextureOffset(s, 0, CEILING, ReadSigned("SC_SavedCOffsetX"), ReadSigned("SC_SavedCOffsetY"));
+		SetTextureOffset(s, 1, CEILING, ReadSigned("SC_SavedUOffset0X"), ReadSigned("SC_SavedUOffset0Y"));
+		SetTextureOffset(s, 2, CEILING, ReadSigned("SC_SavedUOffset1X"), ReadSigned("SC_SavedUOffset1Y"));
+		SetTextureOffset(s, 3, CEILING, ReadSigned("SC_SavedUOffset2X"), ReadSigned("SC_SavedUOffset2Y"));
+		SetTextureOffset(s, 4, CEILING, ReadSigned("SC_SavedUOffset3X"), ReadSigned("SC_SavedUOffset3Y"));
+	}
+	if (info & SAVED_COLOR)
+	{
+		SetLightColor(s,
+			CheckInventory("SC_SavedColorR"),
+			CheckInventory("SC_SavedColorG"),
+			CheckInventory("SC_SavedColorB")
+		);
+	}
+	if (info & SAVED_FADE)
+	{
+		SetFadeColor(s,
+			CheckInventory("SC_SavedFadeR"),
+			CheckInventory("SC_SavedFadeG"),
+			CheckInventory("SC_SavedFadeB")
+		);
+	}
+	if (info & SAVED_F_ACTOR)
+	{
+		Delay(1); // Just for the looks :).
+		SetFloorActor(s, CheckInventory("SC_SavedActor"), CursorAngle>>8);
+	}
+
+	NotifyPaste("Pasted.");
+}

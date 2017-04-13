@@ -1,0 +1,80 @@
+//============================
+// CVARS
+//============================
+
+function void SetCVar(str name, int value)
+{
+	ConsoleCommand(StrParam(s:"set ", s:name, s:" ", d:value));
+}
+
+//============================
+// SIMPLE LIMITING
+//============================
+
+function int min(int a, int b)
+{
+	if (a < b)
+		return a;
+	return b;
+}
+function int max(int a, int b)
+{
+	if (a > b)
+		return a;
+	return b;
+}
+function int clamp(int x, int a, int b)
+{
+	if (x < a)
+		return a;
+	if (x > b)
+		return b;
+	return x;
+}
+
+//===========================
+// INTEGER PACKING
+//===========================
+
+// Pack a 32-bit signed integer into a special unusable 16-bit signed integer.
+function int PackSign16(int x)
+{
+	int negative = (x & 0x80000000);
+	if (negative)
+	{
+		return ((0xFFFFFFFF + x) & 0x00007FFF) | 0x00008000;
+	}
+	return x & 0x00007FFF;
+}
+// And unpack back to normal 32-bit signed integer.
+function int UnpackSign16(int x)
+{
+	int negative = (x & 0x00008000);
+	if (negative)
+	{
+		return -(0x00007FFF - (x & 0x00007FFF));
+	}
+	return x;
+}
+
+
+// Pack unsigned 8-bit values. ========================================
+function int Pack8(int a, int b, int c, int d)
+{
+	return (a<<24) | (b<<16) | (c<<8) | d;
+}
+function int Unpack81(int x) { return (x>>24) & 0x000000FF; }
+function int Unpack82(int x) { return (x>>16) & 0x000000FF; }
+function int Unpack83(int x) { return (x>>8)  & 0x000000FF; }
+function int Unpack84(int x) { return (x>>0)  & 0x000000FF; }
+
+
+// Pack signed 16-bit values. =========================================
+function int Pack16(int a, int b)
+{
+	a = PackSign16(a);
+	b = PackSign16(b);
+	return (a<<16) | b;
+}
+function int Unpack161(int x) { return UnpackSign16((x & 0xFFFF0000)>>16); }
+function int Unpack162(int x) { return UnpackSign16((x & 0x0000FFFF)); }

@@ -1,0 +1,87 @@
+//======================================
+// ACTOR TOOL
+//======================================
+
+Actor SC_SpawnActor : SC_ToolProjectile
+{
+	states
+	{
+	Death:
+		PUFF A 3 Bright ACS_ExecuteAlways(50, 0)
+		Stop
+	}
+}
+
+Actor SC_DeleteActor : SC_ToolProjectile
+{
+	-NOBLOCKMAP
+	-RIPPER
+
+	// Instakills any monster.
+	// Players are immune to this damagetype.
+	DamageType "DeleteActor"
+	Damage 9999
+
+	states
+	{
+	Death:
+		PUFF A 3 Bright ACS_ExecuteAlways(50, 0, 1)
+		Stop
+	}
+}
+
+Actor SC_ReadActor : SC_ToolProjectile
+{
+	states
+	{
+	Death:
+		PUFF A 3 Bright ACS_ExecuteAlways(51, 0)
+		Stop
+	}
+}
+
+Actor SC_SelectedActor : Inventory {}
+Actor SC_SelectedActorCopied : Inventory { Inventory.MaxAmount 0x7fffffff }
+
+Actor SC_ActorTool : Weapon
+{
+	+UNDROPPABLE
+	+WEAPON.NOALERT
+	+WEAPON.NOAUTOAIM
+
+	States
+	{
+	Ready:
+		PUNG A 1 A_WeaponReady
+		NULL A 0 A_JumpIfInventory("SC_CopyButton", 1, "Copy")
+		NULL A 0 A_JumpIfInventory("SC_SpecialButton", 1, "Delete")
+		Loop
+	Select:
+		PUNG A 1 A_Raise
+		Loop
+	Deselect:
+		PUNG A 1 A_Lower
+		Loop
+
+	Fire:
+		NULL A 0 A_JumpIfInventory("SC_MenuOpened", 1, "Ready")
+		NULL A 0 A_JumpIfInventory("SC_SelectedActor", 1, "FireNormal")
+	FireDelete:
+		PUNG B 5 A_FireCustomMissile("SC_DeleteActor")
+		goto Ready
+	FireNormal:
+		PUNG B 5 A_FireCustomMissile("SC_SpawnActor")
+		Goto Ready
+	AltFire:
+		PUNG B 5 ACS_ExecuteAlways(13, 0, tid - 1000)
+		Goto Ready
+	Copy:
+		NULL A 0 A_TakeInventory("SC_CopyButton", 1)
+		PUNG B 5 A_FireCustomMissile("SC_ReadActor")
+		Goto Ready
+	Delete:
+		PUNG B 5 A_FireCustomMissile("SC_DeleteActor")
+		NULL A 0 A_JumpIfInventory("SC_SpecialButton", 1, "Delete") // Refire.
+		Goto Ready
+	}
+}
